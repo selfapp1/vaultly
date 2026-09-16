@@ -447,20 +447,44 @@ function ensureGdrivePicker() {
   return gdrivePickerReady;
 }
 
+/* マイドライブ直下に保存するか、既存フォルダから選ぶかを先に選んでもらう
+   (Googleのフォルダ選択画面はフォルダを一覧から選ぶだけの作りで、
+   「マイドライブ自体」を選択肢として出せないため、ここで補っている) */
+function chooseGdriveFolderMode() {
+  return new Promise((resolve, reject) => {
+    const overlay = getOverlay();
+    overlay.innerHTML = `
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">保存先を選択</div>
+        <button class="settings-item" id="pickRootBtn">📁 マイドライブ直下に保存する</button>
+        <button class="settings-item" id="pickBrowseBtn">🗂️ 既存のフォルダから選ぶ</button>
+        <button class="btn secondary" id="cancelPickModeBtn">キャンセル</button>
+      </div>`;
+    showOverlay();
+    document.getElementById("pickRootBtn").addEventListener("click", () => { closeOverlay(); resolve("root"); });
+    document.getElementById("pickBrowseBtn").addEventListener("click", () => { closeOverlay(); resolve("browse"); });
+    document.getElementById("cancelPickModeBtn").addEventListener("click", () => { closeOverlay(); reject(new Error("folder-pick-cancelled")); });
+  });
+}
+
 /* 保存先フォルダをユーザーに選んでもらう(初めて接続する時、または選び直したい時) */
 async function pickGdriveFolder() {
+  const mode = await chooseGdriveFolderMode();
+  if (mode === "root") return "root";
+
   await ensureGdrivePicker();
   const token = gdriveAccessToken || (await requestGdriveToken());
   return new Promise((resolve, reject) => {
-    const view = new google.picker.DocsView()
+    const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+      .setParent("root")
       .setIncludeFolders(true)
-      .setSelectFolderEnabled(true)
-      .setMimeTypes("application/vnd.google-apps.folder");
+      .setSelectFolderEnabled(true);
     const picker = new google.picker.PickerBuilder()
       .setOAuthToken(token)
       .setDeveloperKey(GDRIVE_API_KEY)
       .addView(view)
-      .setTitle("バックアップの保存先フォルダを選択")
+      .setTitle("保存先フォルダを選択")
       .setCallback((data) => {
         if (data.action === google.picker.Action.PICKED) {
           resolve(data.docs[0].id);
