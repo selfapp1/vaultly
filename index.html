@@ -452,7 +452,7 @@ async function pickGdriveFolder() {
   await ensureGdrivePicker();
   const token = gdriveAccessToken || (await requestGdriveToken());
   return new Promise((resolve, reject) => {
-    const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+    const view = new google.picker.DocsView()
       .setIncludeFolders(true)
       .setSelectFolderEnabled(true)
       .setMimeTypes("application/vnd.google-apps.folder");
