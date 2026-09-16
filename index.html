@@ -666,12 +666,16 @@ function lockVault() {
 }
 
 /* ========================= 保存 ========================= */
-async function persistVault() {
+async function saveVaultLocal() {
   const store = loadStore();
   const enc2 = await encryptObj(state.key, state.vault);
   store.iv = enc2.iv;
   store.data = enc2.data;
   saveStore(store);
+}
+
+async function persistVault() {
+  await saveVaultLocal();
   autoSyncToGoogleDrive(); // 接続済みなら裏で自動アップロード(完了を待たない)
 }
 
@@ -1100,17 +1104,17 @@ function openSettingsSheet() {
       <div class="sheet-handle"></div>
       <div class="sheet-title">設定</div>
       <button class="settings-item" id="changePwBtn">🔑 マスターパスワードを変更</button>
-      <button class="settings-item" id="exportBtn">⬇️ バックアップを書き出す（暗号化済み）</button>
       <button class="settings-item" id="gdriveBtn">☁️ Googleドライブに保存</button>
       <label class="checkbox-line autosync-line">
         <input type="checkbox" id="autosyncToggle" ${localStorage.getItem(GDRIVE_AUTOSYNC_KEY) === "1" ? "checked" : ""} />
         アカウントの追加・編集のたびに自動でGoogleドライブに保存する
       </label>
-      <button class="settings-item" id="importBtn2">⬆️ バックアップから復元する</button>
-      <button class="settings-item" id="gdriveRestoreBtn">☁️ Googleドライブから復元する</button>
-      <input type="file" id="importFile2" accept="application/json" />
+      <button class="settings-item" id="exportBtn">⬇️ バックアップを書き出す（暗号化済み）</button>
       <button class="settings-item" id="exportPlainBtn">📄 テキストで書き出す（暗号化なし）</button>
       <button class="settings-item" id="gdrivePlainBtn">☁️ テキストをGoogleドライブに保存（暗号化なし）</button>
+      <button class="settings-item" id="importBtn2">⬆️ バックアップから復元する</button>
+      <input type="file" id="importFile2" accept="application/json" />
+      <button class="settings-item" id="gdriveRestoreBtn">☁️ Googleドライブから復元する</button>
       <button class="settings-item danger" id="wipeBtn">🗑️ すべてのデータを削除</button>
       <div class="settings-note">
         データはこの端末のブラウザ内にのみ、暗号化して保存されています。外部のサーバーには一切送信されません。<br>
@@ -1367,7 +1371,7 @@ function openRestorePasswordSheet(backupStore) {
     state.vault = importedVault;
     state.openSiteId = null;
     state.maskState.clear();
-    await persistVault();
+    await saveVaultLocal(); // 復元直後にGoogleドライブへ自動で上書き保存しない(誤ったバックアップでクラウド側を壊さないため)
     closeOverlay();
     showToast("復元しました");
     render();
