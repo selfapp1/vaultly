@@ -737,10 +737,10 @@ function renderSetup() {
     <div class="warn-box">⚠️ マスターパスワードを忘れると、保存したデータは二度と復元できません。安全な場所に控えておいてください。</div>
     <div class="field">
       <label>マスターパスワード</label>
-      <input type="password" id="setupPw1" autocomplete="new-password" placeholder="8文字以上を推奨" />
+      <input type="password" id="setupPw1" inputmode="numeric" autocomplete="new-password" placeholder="8文字以上を推奨" />
     </div>
     <div class="error-msg" id="setupError"></div>
-    <button class="btn" id="setupBtn">保管庫を作成する</button>
+    <button class="btn" id="setupBtn">サインアップ</button>
     <button class="btn ghost" id="takeOverBtn">Googleドライブの既存データを引き継ぐ</button>
   </div>`;
 }
@@ -781,7 +781,7 @@ function openTakeOverSheet() {
       </div>
       <div class="sfield">
         <label>マスターパスワード(別の端末と同じもの)</label>
-        <input type="password" id="takeOverPw" autocomplete="off" />
+        <input type="password" id="takeOverPw" inputmode="numeric" autocomplete="off" />
       </div>
       <div class="error-msg" id="takeOverError"></div>
       <div class="btn-row">
@@ -831,7 +831,7 @@ function renderUnlock() {
     <p class="subtitle">マスターパスワードを入力してください</p>
     <div class="field">
       <label>マスターパスワード</label>
-      <input type="password" id="unlockPw" autocomplete="current-password" />
+      <input type="password" id="unlockPw" inputmode="numeric" autocomplete="current-password" />
     </div>
     <div class="error-msg" id="unlockError"></div>
     <button class="btn" id="unlockBtn">ロック解除</button>
@@ -888,8 +888,8 @@ function renderMain() {
   return `
   <header class="top">
     <h2>Password</h2>
-    <button class="icon-btn" id="settingsBtn">${ICONS.gear}</button>
     <button class="icon-btn" id="cloudSyncBtn">${ICONS.cloud}</button>
+    <button class="icon-btn" id="settingsBtn">${ICONS.gear}</button>
     <button class="icon-btn" id="lockBtn">${ICONS.lockSmall}</button>
   </header>
   <div class="search-wrap">
@@ -1197,15 +1197,15 @@ function openChangePasswordSheet() {
       <div class="sheet-title">マスターパスワードを変更</div>
       <div class="sfield">
         <label>現在のパスワード</label>
-        <input type="password" id="curPw" autocomplete="current-password" />
+        <input type="password" id="curPw" inputmode="numeric" autocomplete="current-password" />
       </div>
       <div class="sfield">
         <label>新しいパスワード</label>
-        <input type="password" id="newPw1" autocomplete="new-password" />
+        <input type="password" id="newPw1" inputmode="numeric" autocomplete="new-password" />
       </div>
       <div class="sfield">
         <label>新しいパスワード（確認）</label>
-        <input type="password" id="newPw2" autocomplete="new-password" />
+        <input type="password" id="newPw2" inputmode="numeric" autocomplete="new-password" />
       </div>
       <div class="error-msg" id="changePwError"></div>
       <div class="btn-row">
@@ -1386,7 +1386,7 @@ function openRestorePasswordSheet(backupStore) {
       </div>
       <div class="sfield">
         <label>バックアップ作成時のマスターパスワード</label>
-        <input type="password" id="restorePw" autocomplete="off" />
+        <input type="password" id="restorePw" inputmode="numeric" autocomplete="off" />
       </div>
       <div class="error-msg" id="restoreError"></div>
       <div class="btn-row">
