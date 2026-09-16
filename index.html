@@ -102,11 +102,12 @@
     background: var(--surface); color: var(--text); display: flex; align-items: center; justify-content: center;
     font-size: 17px; cursor: pointer;
   }
-  .search-wrap { padding: 0 16px 10px; }
+  .search-wrap { padding: 0 16px 10px; display: flex; gap: 8px; align-items: center; }
   .search-wrap input {
-    width: 100%; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--border);
+    flex: 1; min-width: 0; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--border);
     background: var(--surface); color: var(--text); font-size: 15px; outline: none;
   }
+  .search-wrap .icon-btn { flex-shrink: 0; }
 
   main.content { padding: 4px 16px 100px; }
   .empty-state { text-align: center; color: var(--text-dim); padding: 60px 20px; font-size: 14px; line-height: 1.8; }
@@ -130,14 +131,33 @@
   .site-body { display: none; padding: 0 14px 14px; }
   .site-card.open .site-body { display: block; }
 
+  .folder-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    margin-bottom: 12px; overflow: hidden;
+  }
+  .folder-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px; cursor: pointer; }
+  .folder-icon {
+    width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: #fff; display: flex; align-items: center; justify-content: center;
+  }
+  .folder-name-wrap { flex: 1; min-width: 0; }
+  .folder-name { font-weight: 700; font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .folder-card .chevron { color: var(--text-dim); transition: transform .2s; font-size: 13px; }
+  .folder-card.open .chevron { transform: rotate(90deg); }
+  .folder-body { display: none; padding: 0 14px 14px; }
+  .folder-card.open .folder-body { display: block; }
+  .folder-body .site-card { margin-bottom: 10px; }
+  .folder-body .site-card:last-child { margin-bottom: 0; }
+
   .field-row {
     display: flex; align-items: center; gap: 10px;
     background: var(--surface-2); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px;
     cursor: pointer; border: 1px solid transparent;
   }
   .field-row:active { border-color: var(--accent-1); }
-  .field-row .flabel { font-size: 11px; color: var(--text-dim); font-weight: 700; margin-bottom: 2px; }
-  .field-row .fvalue { font-size: 15px; word-break: break-all; }
+  .field-row .flabel { font-size: 11px; color: var(--text-dim); font-weight: 500; margin-bottom: 2px; }
+  .field-row .fvalue { font-size: 15px; font-weight: 600; word-break: break-all; }
   .field-row .ftext { flex: 1; min-width: 0; }
   .field-row .feye { color: var(--text-dim); font-size: 16px; padding: 4px; flex-shrink: 0; }
   .field-row .fcopy { color: var(--accent-1); font-size: 16px; padding: 4px; flex-shrink: 0; }
@@ -176,12 +196,12 @@
   .sfield label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 6px; font-weight: 600; }
   .sfield-row { display: flex; gap: 8px; align-items: flex-end; }
   .sfield-row .sfield { flex: 1; margin-bottom: 0; }
-  .sfield input, .sfield textarea {
+  .sfield input, .sfield textarea, .sfield select {
     width: 100%; padding: 12px 13px; border-radius: 11px; border: 1px solid var(--border);
     background: var(--surface); color: var(--text); font-size: 15px; outline: none;
   }
   .sfield textarea { resize: vertical; min-height: 60px; }
-  .sfield input:focus, .sfield textarea:focus { border-color: var(--accent-1); }
+  .sfield input:focus, .sfield textarea:focus, .sfield select:focus { border-color: var(--accent-1); }
   .field-block {
     background: linear-gradient(160deg, rgba(99,102,241,0.16), rgba(168,85,247,0.06)), var(--surface);
     border: 1px solid rgba(99,102,241,0.3); border-radius: 14px; padding: 12px; margin-bottom: 10px;
@@ -299,7 +319,7 @@ async function tryAutoUnlock() {
     const key = await crypto.subtle.importKey("raw", fromB64(cached.key), { name: "AES-GCM" }, true, ["encrypt", "decrypt"]);
     const vault = await decryptObj(key, store.iv, store.data);
     state.key = key;
-    state.vault = vault;
+    state.vault = normalizeVault(vault);
     return true;
   } catch (e) {
     clearSessionKeyCache();
@@ -680,7 +700,7 @@ async function checkAndPullFromDrive() {
     const backupStore = await contentRes.json();
     const vault = await decryptObj(state.key, backupStore.iv, backupStore.data); // saltが同じ端末同士なら復号できる
 
-    state.vault = vault;
+    state.vault = normalizeVault(vault);
     const store = loadStore();
     store.iv = backupStore.iv;
     store.data = backupStore.data;
@@ -714,10 +734,24 @@ async function autoSyncToGoogleDrive() {
 }
 
 /* ========================= 状態 ========================= */
+const OPEN_FOLDERS_KEY = "vaultly_open_folders";
+function loadOpenFolderIds() {
+  try {
+    const raw = localStorage.getItem(OPEN_FOLDERS_KEY);
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch (e) {
+    return new Set();
+  }
+}
+function saveOpenFolderIds() {
+  localStorage.setItem(OPEN_FOLDERS_KEY, JSON.stringify([...state.openFolderIds]));
+}
+
 let state = {
   key: null,          // CryptoKey (メモリ上のみ)
-  vault: null,         // {sites: [...]}
+  vault: null,         // {sites: [...], folders: [...]}
   openSiteId: null,
+  openFolderIds: loadOpenFolderIds(), // 開いた状態のフォルダid一覧(端末に保存、アプリを閉じても保持)
   search: "",
   maskState: new Map(), // フィールドid -> 現在マスク中かどうか(未設定時はf.secretに従う)
 };
@@ -725,6 +759,12 @@ let idleTimer = null;
 
 function isMasked(field) {
   return state.maskState.has(field.id) ? state.maskState.get(field.id) : !!field.secret;
+}
+
+/* 古いバックアップ/端末には folders が無いことがあるので、読み込むたびに補完する */
+function normalizeVault(vault) {
+  if (!vault.folders) vault.folders = [];
+  return vault;
 }
 
 function uid() {
@@ -743,6 +783,8 @@ const ICONS = {
   gear: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.8 7.8 0 0 0 0-3l2-1.5-2-3.4-2.3.9a7.7 7.7 0 0 0-2.6-1.5L14 2h-4l-.5 2.4a7.7 7.7 0 0 0-2.6 1.5l-2.3-.9-2 3.4 2 1.5a7.8 7.8 0 0 0 0 3l-2 1.5 2 3.4 2.3-.9c.8.7 1.6 1.2 2.6 1.5L10 22h4l.5-2.4a7.7 7.7 0 0 0 2.6-1.5l2.3.9 2-3.4-2-1.5Z"/></svg>`,
   lockSmall: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.4" fill="currentColor" stroke="none"/></svg>`,
   cloud: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10a4 4 0 0 0 .5-7.97A5.5 5.5 0 0 0 7.1 8.5 4 4 0 0 0 7 18Z"/></svg>`,
+  folder: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6l2 2.2h8.4A1.5 1.5 0 0 1 21 8.7v9.8A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5Z"/></svg>`,
+  folderPlus: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6l2 2.2h8.4A1.5 1.5 0 0 1 21 8.7v9.8A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5Z"/><path d="M12 11v5M9.5 13.5h5"/></svg>`,
 };
 
 /* ========================= 自動ロック ========================= */
@@ -834,7 +876,7 @@ function bindSetup() {
     const saltBytes = crypto.getRandomValues(new Uint8Array(16));
     const saltB64 = toB64(saltBytes);
     const key = await deriveKey(pw1, saltB64, ITERATIONS);
-    const vault = { sites: [] };
+    const vault = { sites: [], folders: [] };
     const { iv, data } = await encryptObj(key, vault);
     saveStore({ salt: saltB64, iterations: ITERATIONS, iv, data });
 
@@ -883,7 +925,7 @@ function openTakeOverSheet() {
 
       saveStore(backupStore);
       state.key = key;
-      state.vault = vault;
+      state.vault = normalizeVault(vault);
       if (modifiedTime) localStorage.setItem(GDRIVE_KNOWN_MODIFIED_KEY, modifiedTime);
       localStorage.setItem(GDRIVE_AUTOSYNC_KEY, "1");
       resetIdleTimer();
@@ -928,7 +970,7 @@ function bindUnlock() {
       const key = await deriveKey(pw, store.salt, store.iterations);
       const vault = await decryptObj(key, store.iv, store.data);
       state.key = key;
-      state.vault = vault;
+      state.vault = normalizeVault(vault);
       resetIdleTimer();
       cacheKeyForSession(key);
       autoPullAndRefresh();
@@ -958,12 +1000,56 @@ function filteredSites() {
   return state.vault.sites.filter((s) => normalizeForSearch(s.name).includes(q));
 }
 
-function renderMain() {
-  const sites = filteredSites();
-  const listHtml = sites.length
-    ? sites.map(renderSiteCard).join("")
-    : `<div class="empty-state">${state.vault.sites.length ? "一致するアカウントがありません" : "まだ何も登録されていません。<br>右下の + から追加しましょう。"}</div>`;
+function buildListHtml() {
+  const q = state.search.trim();
+  if (q) {
+    const sites = filteredSites();
+    return sites.length
+      ? sites.map(renderSiteCard).join("")
+      : `<div class="empty-state">一致するアカウントがありません</div>`;
+  }
+  if (!state.vault.sites.length && !state.vault.folders.length) {
+    return `<div class="empty-state">まだ何も登録されていません。<br>右下の + から追加しましょう。</div>`;
+  }
+  if (!state.vault.folders.length) {
+    return state.vault.sites.map(renderSiteCard).join("");
+  }
+  return renderFolderGroups();
+}
 
+function renderFolderGroups() {
+  const groups = state.vault.folders.map((folder) => ({
+    folder,
+    sites: state.vault.sites.filter((s) => s.folderId === folder.id),
+  }));
+  const validFolderIds = new Set(state.vault.folders.map((f) => f.id));
+  const unassigned = state.vault.sites.filter((s) => !s.folderId || !validFolderIds.has(s.folderId));
+  if (unassigned.length) {
+    groups.push({ folder: { id: "__unassigned__", name: "未分類" }, sites: unassigned });
+  }
+  return groups.map(renderFolderCard).join("");
+}
+
+function renderFolderCard({ folder, sites }) {
+  const isOpen = state.openFolderIds.has(folder.id);
+  const innerHtml = sites.length
+    ? sites.map(renderSiteCard).join("")
+    : `<div class="empty-state" style="padding:16px 0;">このフォルダは空です</div>`;
+  return `
+  <div class="folder-card ${isOpen ? "open" : ""}" data-folder="${folder.id}">
+    <div class="folder-head" data-toggle-folder="${folder.id}">
+      <div class="folder-icon">${ICONS.folder}</div>
+      <div class="folder-name-wrap">
+        <div class="folder-name">${escapeHtml(folder.name)}</div>
+        <div class="site-sub">${sites.length}件</div>
+      </div>
+      <div class="chevron">▶</div>
+    </div>
+    <div class="folder-body">${innerHtml}</div>
+  </div>`;
+}
+
+function renderMain() {
   return `
   <header class="top">
     <h2>Password</h2>
@@ -973,8 +1059,9 @@ function renderMain() {
   </header>
   <div class="search-wrap">
     <input type="text" id="searchInput" placeholder="アカウント名で検索" value="${escapeHtml(state.search)}" />
+    <button class="icon-btn" id="addFolderBtn" title="新しいフォルダを作る">${ICONS.folderPlus}</button>
   </div>
-  <main class="content">${listHtml}</main>
+  <main class="content">${buildListHtml()}</main>
   <button class="fab" id="addSiteBtn">＋</button>
   `;
 }
@@ -1023,6 +1110,7 @@ function bindMain() {
   document.getElementById("cloudSyncBtn").addEventListener("click", () => openCloudSyncSheet());
   document.getElementById("lockBtn").addEventListener("click", lockVault);
   document.getElementById("addSiteBtn").addEventListener("click", () => openSiteSheet(null));
+  document.getElementById("addFolderBtn").addEventListener("click", () => openCreateFolderSheet());
 
   const searchInput = document.getElementById("searchInput");
   searchInput.addEventListener("input", (e) => {
@@ -1036,14 +1124,20 @@ function bindMain() {
 function renderPartialList() {
   const main = document.querySelector("main.content");
   if (!main) return;
-  const sites = filteredSites();
-  main.innerHTML = sites.length
-    ? sites.map(renderSiteCard).join("")
-    : `<div class="empty-state">${state.vault.sites.length ? "一致するアカウントがありません" : "まだ何も登録されていません。<br>右下の + から追加しましょう。"}</div>`;
+  main.innerHTML = buildListHtml();
   bindListEvents();
 }
 
 function bindListEvents() {
+  document.querySelectorAll("[data-toggle-folder]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const id = el.getAttribute("data-toggle-folder");
+      if (state.openFolderIds.has(id)) state.openFolderIds.delete(id);
+      else state.openFolderIds.add(id);
+      saveOpenFolderIds();
+      renderPartialList();
+    });
+  });
   document.querySelectorAll("[data-toggle-site]").forEach((el) => {
     el.addEventListener("click", () => {
       const id = el.getAttribute("data-toggle-site");
@@ -1105,15 +1199,25 @@ function defaultFields() {
 
 function openSiteSheet(siteId) {
   editingSiteId = siteId;
-  let name = "", memo = "";
+  let name = "", memo = "", folderId = "";
   if (siteId) {
     const site = state.vault.sites.find((s) => s.id === siteId);
     name = site.name;
     memo = site.memo || "";
+    folderId = site.folderId || "";
     editingFields = site.entries.map((f) => ({ ...f }));
   } else {
     editingFields = defaultFields();
   }
+
+  const folderFieldHtml = state.vault.folders.length ? `
+      <div class="sfield">
+        <label>フォルダ</label>
+        <select id="siteFolderInput">
+          <option value="">未分類</option>
+          ${state.vault.folders.map((f) => `<option value="${f.id}" ${f.id === folderId ? "selected" : ""}>${escapeHtml(f.name)}</option>`).join("")}
+        </select>
+      </div>` : "";
 
   const overlay = getOverlay();
   overlay.innerHTML = `
@@ -1124,6 +1228,7 @@ function openSiteSheet(siteId) {
         <label>アカウント名</label>
         <input type="text" id="siteNameInput" value="${escapeHtml(name)}" placeholder="例）Amazon" />
       </div>
+      ${folderFieldHtml}
       <div id="fieldsContainer"></div>
       <button class="add-field-btn" id="addFieldBtn">＋ 項目を追加</button>
       <div class="sfield">
@@ -1177,6 +1282,8 @@ function renderFieldsEditor() {
 async function saveSiteFromSheet() {
   const name = document.getElementById("siteNameInput").value.trim();
   const memo = document.getElementById("siteMemoInput").value.trim();
+  const folderInput = document.getElementById("siteFolderInput");
+  const folderId = folderInput ? folderInput.value || null : null;
   if (!name) { alert("アカウント名を入力してください"); return; }
   const isDuplicateName = state.vault.sites.some((s) => s.name === name && s.id !== editingSiteId);
   if (isDuplicateName) {
@@ -1193,12 +1300,13 @@ async function saveSiteFromSheet() {
   let previousSnapshot = null;
   if (editingSiteId) {
     const site = state.vault.sites.find((s) => s.id === editingSiteId);
-    previousSnapshot = { name: site.name, memo: site.memo, entries: site.entries };
+    previousSnapshot = { name: site.name, memo: site.memo, entries: site.entries, folderId: site.folderId };
     site.name = name;
     site.memo = memo;
     site.entries = cleanFields;
+    site.folderId = folderId;
   } else {
-    state.vault.sites.push({ id: uid(), name, memo, entries: cleanFields });
+    state.vault.sites.push({ id: uid(), name, memo, entries: cleanFields, folderId });
   }
   try {
     await persistVault();
@@ -1213,6 +1321,49 @@ async function saveSiteFromSheet() {
   }
   closeOverlay();
   renderPartialList();
+}
+
+/* ========================= フォルダ作成シート ========================= */
+function openCreateFolderSheet() {
+  const overlay = getOverlay();
+  overlay.innerHTML = `
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">新しいフォルダ</div>
+      <div class="sfield">
+        <label>フォルダ名</label>
+        <input type="text" id="folderNameInput" placeholder="例）銀行" />
+      </div>
+      <div class="error-msg" id="folderNameError"></div>
+      <div class="btn-row">
+        <button class="btn secondary" id="cancelFolderBtn">キャンセル</button>
+        <button class="btn" id="createFolderBtn">作成</button>
+      </div>
+    </div>`;
+  showOverlay();
+
+  document.getElementById("cancelFolderBtn").addEventListener("click", closeOverlay);
+  document.getElementById("createFolderBtn").addEventListener("click", async () => {
+    const name = document.getElementById("folderNameInput").value.trim();
+    const errEl = document.getElementById("folderNameError");
+    if (!name) { errEl.textContent = "フォルダ名を入力してください"; return; }
+    if (state.vault.folders.some((f) => f.name === name)) {
+      errEl.textContent = "同じ名前のフォルダが既にあります";
+      return;
+    }
+    const folder = { id: uid(), name };
+    state.vault.folders.push(folder);
+    try {
+      await persistVault();
+    } catch (e) {
+      state.vault.folders.pop();
+      return;
+    }
+    state.openFolderIds.add(folder.id);
+    saveOpenFolderIds();
+    closeOverlay();
+    renderPartialList();
+  });
 }
 
 /* ========================= 設定シート ========================= */
@@ -1507,7 +1658,7 @@ function openRestorePasswordSheet(backupStore) {
       return;
     }
     if (!confirm("現在のアカウントデータを、このバックアップの内容に置き換えます。よろしいですか？")) return;
-    state.vault = importedVault;
+    state.vault = normalizeVault(importedVault);
     state.openSiteId = null;
     state.maskState.clear();
     await saveVaultLocal(); // 復元直後にGoogleドライブへ自動で上書き保存しない(誤ったバックアップでクラウド側を壊さないため)
