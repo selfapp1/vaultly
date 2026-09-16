@@ -1,4 +1,4 @@
-const CACHE_NAME = "passvault-cache-v1";
+const CACHE_NAME = "passvault-cache-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -26,19 +26,19 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+/* ネット接続があれば常に最新版を取りに行き、オフラインの時だけキャッシュを使う
+   (以前は逆で、キャッシュを先に表示してから裏で更新していたため、
+   毎回リロードを2回しないと最新のアプリが反映されない問題があった) */
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, networkResponse.clone());
-          });
-          return networkResponse;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, networkResponse.clone());
+        });
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
