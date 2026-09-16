@@ -147,8 +147,19 @@
   .folder-card.open .chevron { transform: rotate(90deg); }
   .folder-body { display: none; padding: 0 14px 14px; }
   .folder-card.open .folder-body { display: block; }
-  .folder-body .site-card { margin-bottom: 10px; }
-  .folder-body .site-card:last-child { margin-bottom: 0; }
+  .folder-body .swipe-row { margin-bottom: 10px; }
+  .folder-body .swipe-row:last-child { margin-bottom: 0; }
+
+  .swipe-row { position: relative; overflow: hidden; border-radius: 16px; margin-bottom: 12px; }
+  .swipe-row .swipe-fg { position: relative; z-index: 1; }
+  .swipe-row .swipe-fg .site-card, .swipe-row .swipe-fg .folder-card { margin-bottom: 0; }
+  .swipe-actions { position: absolute; top: 0; right: 0; bottom: 0; display: flex; z-index: 0; }
+  .swipe-action-btn {
+    appearance: none; border: none; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer;
+    width: 76px; display: flex; align-items: center; justify-content: center; padding: 0 4px; text-align: center;
+  }
+  .swipe-action-btn.delete { background: var(--danger); }
+  .swipe-action-btn.rename { background: var(--accent-1); }
 
   .field-row {
     display: flex; align-items: center; gap: 10px;
@@ -1035,17 +1046,28 @@ function renderFolderCard({ folder, sites }) {
   const innerHtml = sites.length
     ? sites.map(renderSiteCard).join("")
     : `<div class="empty-state" style="padding:16px 0;">このフォルダは空です</div>`;
-  return `
-  <div class="folder-card ${isOpen ? "open" : ""}" data-folder="${folder.id}">
-    <div class="folder-head" data-toggle-folder="${folder.id}">
-      <div class="folder-icon">${ICONS.folder}</div>
-      <div class="folder-name-wrap">
-        <div class="folder-name">${escapeHtml(folder.name)}</div>
-        <div class="site-sub">${sites.length}件</div>
+  const folderCardHtml = `
+    <div class="folder-card ${isOpen ? "open" : ""}" data-folder="${folder.id}">
+      <div class="folder-head" data-toggle-folder="${folder.id}">
+        <div class="folder-icon">${ICONS.folder}</div>
+        <div class="folder-name-wrap">
+          <div class="folder-name">${escapeHtml(folder.name)}</div>
+          <div class="site-sub">${sites.length}件</div>
+        </div>
+        <div class="chevron">▶</div>
       </div>
-      <div class="chevron">▶</div>
+      <div class="folder-body">${innerHtml}</div>
+    </div>`;
+
+  if (folder.id === "__unassigned__") return folderCardHtml; // 未分類は仮想フォルダなので変更・削除の対象外
+
+  return `
+  <div class="swipe-row" data-swipe-row>
+    <div class="swipe-actions">
+      <button class="swipe-action-btn rename" data-rename-folder="${folder.id}">名前変更</button>
+      <button class="swipe-action-btn delete" data-delete-folder="${folder.id}">削除</button>
     </div>
-    <div class="folder-body">${innerHtml}</div>
+    <div class="swipe-fg">${folderCardHtml}</div>
   </div>`;
 }
 
@@ -1085,21 +1107,27 @@ function renderSiteCard(site) {
   const memoHtml = site.memo ? `<div class="memo-box">${escapeHtml(site.memo)}</div>` : "";
 
   return `
-  <div class="site-card ${isOpen ? "open" : ""}" data-site="${site.id}">
-    <div class="site-head" data-toggle-site="${site.id}">
-      <div class="avatar">${escapeHtml(siteInitial(site.name))}</div>
-      <div class="site-name-wrap">
-        <div class="site-name">${escapeHtml(site.name)}</div>
-        <div class="site-sub">${site.entries.length}項目</div>
-      </div>
-      <div class="chevron">▶</div>
+  <div class="swipe-row" data-swipe-row>
+    <div class="swipe-actions">
+      <button class="swipe-action-btn delete" data-delete="${site.id}">削除</button>
     </div>
-    <div class="site-body">
-      ${fieldsHtml}
-      ${memoHtml}
-      <div class="card-actions">
-        <button class="btn secondary" data-edit="${site.id}">編集</button>
-        <button class="btn danger" data-delete="${site.id}">削除</button>
+    <div class="swipe-fg">
+      <div class="site-card ${isOpen ? "open" : ""}" data-site="${site.id}">
+        <div class="site-head" data-toggle-site="${site.id}">
+          <div class="avatar">${escapeHtml(siteInitial(site.name))}</div>
+          <div class="site-name-wrap">
+            <div class="site-name">${escapeHtml(site.name)}</div>
+            <div class="site-sub">${site.entries.length}項目</div>
+          </div>
+          <div class="chevron">▶</div>
+        </div>
+        <div class="site-body">
+          ${fieldsHtml}
+          ${memoHtml}
+          <div class="card-actions">
+            <button class="btn secondary" data-edit="${site.id}">編集</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>`;
@@ -1131,6 +1159,8 @@ function renderPartialList() {
 function bindListEvents() {
   document.querySelectorAll("[data-toggle-folder]").forEach((el) => {
     el.addEventListener("click", () => {
+      const row = el.closest("[data-swipe-row]");
+      if (row && row.dataset.justSwiped === "1") return; // スワイプ操作の直後は開閉させない
       const id = el.getAttribute("data-toggle-folder");
       if (state.openFolderIds.has(id)) state.openFolderIds.delete(id);
       else state.openFolderIds.add(id);
@@ -1140,6 +1170,8 @@ function bindListEvents() {
   });
   document.querySelectorAll("[data-toggle-site]").forEach((el) => {
     el.addEventListener("click", () => {
+      const row = el.closest("[data-swipe-row]");
+      if (row && row.dataset.justSwiped === "1") return; // スワイプ操作の直後は開閉させない
       const id = el.getAttribute("data-toggle-site");
       state.openSiteId = state.openSiteId === id ? null : id;
       renderPartialList();
@@ -1183,6 +1215,93 @@ function bindListEvents() {
         renderPartialList();
       }
     });
+  });
+  document.querySelectorAll("[data-rename-folder]").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openRenameFolderSheet(el.getAttribute("data-rename-folder"));
+    });
+  });
+  document.querySelectorAll("[data-delete-folder]").forEach((el) => {
+    el.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const id = el.getAttribute("data-delete-folder");
+      const folder = state.vault.folders.find((f) => f.id === id);
+      if (!folder) return;
+      if (confirm(`「${folder.name}」フォルダを削除しますか？中のアカウントは削除されず、未分類に移動します。`)) {
+        state.vault.folders = state.vault.folders.filter((f) => f.id !== id);
+        state.openFolderIds.delete(id);
+        saveOpenFolderIds();
+        await persistVault();
+        renderPartialList();
+      }
+    });
+  });
+  bindSwipeRows();
+}
+
+/* スワイプして削除・名前変更ボタンを出す操作(アカウント行・フォルダ行共通) */
+function closeOtherSwipes(exceptRow) {
+  document.querySelectorAll("[data-swipe-row]").forEach((row) => {
+    if (row === exceptRow) return;
+    const fg = row.querySelector(".swipe-fg");
+    if (fg) {
+      fg.style.transition = "transform .2s ease";
+      fg.style.transform = "translateX(0px)";
+    }
+  });
+}
+
+function bindSwipeRows() {
+  document.querySelectorAll("[data-swipe-row]").forEach((row) => {
+    const fg = row.querySelector(".swipe-fg");
+    const actions = row.querySelector(".swipe-actions");
+    const head = row.querySelector(".site-head, .folder-head");
+    if (!fg || !actions || !head) return;
+    const actionsWidth = actions.offsetWidth;
+    let startX = 0, startY = 0, startTranslate = 0, dragging = false, moved = false;
+
+    const getTranslate = () => {
+      const match = fg.style.transform.match(/translateX\((-?\d+(?:\.\d+)?)px\)/);
+      return match ? parseFloat(match[1]) : 0;
+    };
+
+    head.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      closeOtherSwipes(row);
+      startX = e.clientX;
+      startY = e.clientY;
+      startTranslate = getTranslate();
+      dragging = true;
+      moved = false;
+      head.setPointerCapture(e.pointerId);
+      fg.style.transition = "none";
+    });
+    head.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (!moved) {
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        if (Math.abs(dy) > Math.abs(dx)) { dragging = false; return; } // 縦スクロールを優先
+        moved = true;
+      }
+      const next = Math.max(-actionsWidth, Math.min(0, startTranslate + dx));
+      fg.style.transform = `translateX(${next}px)`;
+    });
+    const endDrag = () => {
+      if (!dragging) return;
+      dragging = false;
+      fg.style.transition = "transform .2s ease";
+      if (moved) {
+        const current = getTranslate();
+        fg.style.transform = current < -actionsWidth / 2 ? `translateX(${-actionsWidth}px)` : "translateX(0px)";
+        row.dataset.justSwiped = "1";
+        setTimeout(() => { row.dataset.justSwiped = ""; }, 260);
+      }
+    };
+    head.addEventListener("pointerup", endDrag);
+    head.addEventListener("pointercancel", endDrag);
   });
 }
 
@@ -1361,6 +1480,48 @@ function openCreateFolderSheet() {
     }
     state.openFolderIds.add(folder.id);
     saveOpenFolderIds();
+    closeOverlay();
+    renderPartialList();
+  });
+}
+
+function openRenameFolderSheet(folderId) {
+  const folder = state.vault.folders.find((f) => f.id === folderId);
+  if (!folder) return;
+  const overlay = getOverlay();
+  overlay.innerHTML = `
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">フォルダ名を変更</div>
+      <div class="sfield">
+        <label>フォルダ名</label>
+        <input type="text" id="folderNameInput" value="${escapeHtml(folder.name)}" placeholder="例）銀行" />
+      </div>
+      <div class="error-msg" id="folderNameError"></div>
+      <div class="btn-row">
+        <button class="btn secondary" id="cancelFolderBtn">キャンセル</button>
+        <button class="btn" id="renameFolderBtn">保存</button>
+      </div>
+    </div>`;
+  showOverlay();
+
+  document.getElementById("cancelFolderBtn").addEventListener("click", closeOverlay);
+  document.getElementById("renameFolderBtn").addEventListener("click", async () => {
+    const name = document.getElementById("folderNameInput").value.trim();
+    const errEl = document.getElementById("folderNameError");
+    if (!name) { errEl.textContent = "フォルダ名を入力してください"; return; }
+    if (state.vault.folders.some((f) => f.name === name && f.id !== folderId)) {
+      errEl.textContent = "同じ名前のフォルダが既にあります";
+      return;
+    }
+    const previousName = folder.name;
+    folder.name = name;
+    try {
+      await persistVault();
+    } catch (e) {
+      folder.name = previousName;
+      return;
+    }
     closeOverlay();
     renderPartialList();
   });
