@@ -218,6 +218,7 @@
     cursor: pointer;
   }
   .settings-item.danger { color: var(--danger); }
+  .settings-item.gap-top { margin-top: 20px; }
   .autosync-line {
     display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-dim);
     padding: 2px 4px 16px; cursor: pointer;
@@ -1114,7 +1115,7 @@ function openSettingsSheet() {
       <button class="settings-item" id="gdrivePlainBtn">☁️ テキストをGoogleドライブに保存（暗号化なし）</button>
       <button class="settings-item" id="importBtn2">⬆️ バックアップから復元する</button>
       <input type="file" id="importFile2" accept="application/json" />
-      <button class="settings-item" id="gdriveRestoreBtn">☁️ Googleドライブから復元する</button>
+      <button class="settings-item gap-top" id="gdriveRestoreBtn">☁️ Googleドライブから復元する</button>
       <button class="settings-item danger" id="wipeBtn">🗑️ すべてのデータを削除</button>
       <div class="settings-note">
         データはこの端末のブラウザ内にのみ、暗号化して保存されています。外部のサーバーには一切送信されません。<br>
@@ -1429,6 +1430,14 @@ function render() {
 
 /* ========================= Service Worker ========================= */
 if ("serviceWorker" in navigator) {
+  /* 新しいバージョンに切り替わった瞬間に自動で1回だけ再読み込みする
+     (これがないと、リロードを2回しないと最新版に切り替わらない) */
+  let swRefreshing = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (swRefreshing) return;
+    swRefreshing = true;
+    window.location.reload();
+  });
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(() => {});
   });
