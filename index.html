@@ -1178,6 +1178,10 @@ async function saveSiteFromSheet() {
   const name = document.getElementById("siteNameInput").value.trim();
   const memo = document.getElementById("siteMemoInput").value.trim();
   if (!name) { alert("アカウント名を入力してください"); return; }
+  const isDuplicateName = state.vault.sites.some((s) => s.name === name && s.id !== editingSiteId);
+  if (isDuplicateName) {
+    if (!confirm(`「${name}」という名前のアカウントは既に登録されています。本当に保存しますか？`)) return;
+  }
   const SECRET_LABEL_RE = /パスワード|password|pass|pwd|pin|secret|暗証/i;
   const cleanFields = editingFields
     .filter((f) => f.label.trim() !== "" || f.value.trim() !== "")
