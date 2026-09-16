@@ -13,6 +13,7 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png" />
 <link rel="icon" href="icons/icon-192.png" />
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
 <style>
   :root {
     --bg: #0f1115;
@@ -432,26 +433,70 @@ async function gdriveFetch(url, options = {}) {
   return res;
 }
 
+const GDRIVE_API_KEY = "AIzaSyB0HKfA8crJaz4AkrmsXC9B0JqsOBELwv4";
+let gdrivePickerReady = null;
+function ensureGdrivePicker() {
+  if (gdrivePickerReady) return gdrivePickerReady;
+  gdrivePickerReady = new Promise((resolve, reject) => {
+    if (!window.gapi) {
+      reject(new Error("Googleの読み込みに失敗しました。通信環境を確認してもう一度お試しください。"));
+      return;
+    }
+    gapi.load("picker", { callback: resolve, onerror: () => reject(new Error("フォルダ選択機能の読み込みに失敗しました。")) });
+  });
+  return gdrivePickerReady;
+}
+
+/* 保存先フォルダをユーザーに選んでもらう(初めて接続する時、または選び直したい時) */
+async function pickGdriveFolder() {
+  await ensureGdrivePicker();
+  const token = gdriveAccessToken || (await requestGdriveToken());
+  return new Promise((resolve, reject) => {
+    const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+      .setIncludeFolders(true)
+      .setSelectFolderEnabled(true)
+      .setMimeTypes("application/vnd.google-apps.folder");
+    const picker = new google.picker.PickerBuilder()
+      .setOAuthToken(token)
+      .setDeveloperKey(GDRIVE_API_KEY)
+      .addView(view)
+      .setTitle("バックアップの保存先フォルダを選択")
+      .setCallback((data) => {
+        if (data.action === google.picker.Action.PICKED) {
+          resolve(data.docs[0].id);
+        } else if (data.action === google.picker.Action.CANCEL) {
+          reject(new Error("folder-pick-cancelled"));
+        }
+      })
+      .build();
+    picker.setVisible(true);
+  });
+}
+
 async function getOrCreateGdriveFolder() {
   const cached = localStorage.getItem(GDRIVE_FOLDER_KEY);
   if (cached) return cached;
 
-  const q = encodeURIComponent("mimeType='application/vnd.google-apps.folder' and name='Vaultlyバックアップ' and trashed=false");
-  const listRes = await gdriveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
-  const listJson = await listRes.json();
-  if (listJson.files && listJson.files.length > 0) {
-    localStorage.setItem(GDRIVE_FOLDER_KEY, listJson.files[0].id);
-    return listJson.files[0].id;
-  }
+  const folderId = await pickGdriveFolder();
+  localStorage.setItem(GDRIVE_FOLDER_KEY, folderId);
+  return folderId;
+}
 
-  const createRes = await gdriveFetch("https://www.googleapis.com/drive/v3/files", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: "Vaultlyバックアップ", mimeType: "application/vnd.google-apps.folder" }),
-  });
-  const createJson = await createRes.json();
-  localStorage.setItem(GDRIVE_FOLDER_KEY, createJson.id);
-  return createJson.id;
+/* 保存先フォルダを選び直す(選び直すと、これ以降の保存先だけが変わる。過去のバックアップファイルは移動しない) */
+async function repickGdriveFolder() {
+  try {
+    const folderId = await pickGdriveFolder();
+    localStorage.setItem(GDRIVE_FOLDER_KEY, folderId);
+    localStorage.removeItem(GDRIVE_FILE_ID_KEY);
+    localStorage.removeItem(GDRIVE_PLAIN_FILE_ID_KEY);
+    localStorage.removeItem(GDRIVE_KNOWN_MODIFIED_KEY);
+    showToast("保存先フォルダを変更しました");
+  } catch (e) {
+    if (!(e && e.message === "folder-pick-cancelled")) {
+      console.error(e);
+      alert("フォルダの選択に失敗しました。もう一度お試しください。");
+    }
+  }
 }
 
 const GDRIVE_BACKUP_FILENAME = "vaultly-backup.json";
@@ -1197,8 +1242,10 @@ function openCloudSyncSheet() {
         <input type="checkbox" id="autosyncToggle" ${localStorage.getItem(GDRIVE_AUTOSYNC_KEY) === "1" ? "checked" : ""} />
         アカウントの追加・編集のたびに自動でGoogleドライブに保存する
       </label>
+      <button class="settings-item" id="repickFolderBtn">📁 保存先フォルダを選び直す</button>
       <div class="settings-note">
-        「今すぐ同期する」を押すと、初回のみGoogleへのログイン確認が表示されます。以後は上のチェックがオンの間、アカウントを追加・編集・削除するたびに同じファイルへ自動で上書き保存され、リロードやロック解除のたびに他の端末の変更を自動で取り込みます（常時監視はしていないので、最新の状態を見たい時は都度リロードしてください）。別の端末で初めて使う場合は、セットアップ画面の「Googleドライブの既存データを引き継ぐ」で同じマスターパスワードを使うようにしてください。
+        「今すぐ同期する」を押すと、初回のみGoogleへのログイン確認と、保存先フォルダを選ぶ画面が表示されます。以後は上のチェックがオンの間、アカウントを追加・編集・削除するたびに同じファイルへ自動で上書き保存され、リロードやロック解除のたびに他の端末の変更を自動で取り込みます（常時監視はしていないので、最新の状態を見たい時は都度リロードしてください）。別の端末で初めて使う場合は、セットアップ画面の「Googleドライブの既存データを引き継ぐ」で同じマスターパスワードを使うようにしてください。<br>
+        「保存先フォルダを選び直す」は、これ以降の保存先だけを変更します。今まで保存していたファイルは移動しません。
       </div>
       <button class="btn secondary" id="closeSyncBtn">閉じる</button>
     </div>`;
@@ -1209,6 +1256,7 @@ function openCloudSyncSheet() {
   document.getElementById("autosyncToggle").addEventListener("change", (e) => {
     localStorage.setItem(GDRIVE_AUTOSYNC_KEY, e.target.checked ? "1" : "0");
   });
+  document.getElementById("repickFolderBtn").addEventListener("click", repickGdriveFolder);
 }
 
 function openChangePasswordSheet() {
