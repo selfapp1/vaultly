@@ -329,7 +329,17 @@ function loadStore() {
   return raw ? JSON.parse(raw) : null;
 }
 function saveStore(store) {
-  localStorage.setItem(STORE_KEY, JSON.stringify(store));
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(store));
+  } catch (e) {
+    console.error(e);
+    if (e && (e.name === "QuotaExceededError" || e.code === 22)) {
+      alert("保存容量の上限に達しているため、保存できませんでした。今回の変更は反映されていません（今までのデータはそのまま残っています）。");
+    } else {
+      alert("データの保存に失敗しました。もう一度お試しください。");
+    }
+    throw e;
+  }
 }
 
 /* ========================= Googleドライブ連携 ========================= */
@@ -1107,15 +1117,27 @@ async function saveSiteFromSheet() {
       return { id: f.id, label, value: f.value, secret: SECRET_LABEL_RE.test(label) };
     });
 
+  let previousSnapshot = null;
   if (editingSiteId) {
     const site = state.vault.sites.find((s) => s.id === editingSiteId);
+    previousSnapshot = { name: site.name, memo: site.memo, entries: site.entries };
     site.name = name;
     site.memo = memo;
     site.entries = cleanFields;
   } else {
     state.vault.sites.push({ id: uid(), name, memo, entries: cleanFields });
   }
-  await persistVault();
+  try {
+    await persistVault();
+  } catch (e) {
+    // 保存に失敗した場合、画面上のデータも保存前の状態に戻す(実際に保存された内容とズレないようにするため)
+    if (previousSnapshot) {
+      Object.assign(state.vault.sites.find((s) => s.id === editingSiteId), previousSnapshot);
+    } else {
+      state.vault.sites.pop();
+    }
+    return;
+  }
   closeOverlay();
   renderPartialList();
 }
