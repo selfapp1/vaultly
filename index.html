@@ -503,6 +503,10 @@ const GDRIVE_KNOWN_MODIFIED_KEY = "pv_gdrive_known_modified_time";
 let gdriveSyncQueue = Promise.resolve();
 function uploadBackupToDrive() {
   const task = gdriveSyncQueue.then(async () => {
+    if (state.vault && state.vault.sites.length === 0 && (await gdriveBackupHasData())) {
+      const proceed = confirm("Googleドライブには登録済みのデータがありますが、今この端末のデータは空っぽです。このままGoogleドライブのバックアップも空にしてよろしいですか？");
+      if (!proceed) return;
+    }
     const store = loadStore();
     const payload = JSON.stringify({ app: "passvault", version: 1, ...store }, null, 2);
     const modifiedTime = await uploadContentToDrive(GDRIVE_BACKUP_FILENAME, "application/json", payload, GDRIVE_FILE_ID_KEY);
@@ -512,11 +516,25 @@ function uploadBackupToDrive() {
   return task;
 }
 
+/* 今この端末が空っぽの状態でGoogleドライブに保存しようとした時、
+   すでにGoogleドライブ側に中身があるかどうかを確認するためだけの軽い問い合わせ */
+async function gdriveBackupHasData() {
+  try {
+    const { backupStore } = await downloadBackupFromDrive();
+    const vault = await decryptObj(state.key, backupStore.iv, backupStore.data);
+    return !!(vault && vault.sites && vault.sites.length > 0);
+  } catch (e) {
+    return false;
+  }
+}
+
 async function saveToGoogleDrive() {
   try {
     showToast("Googleにサインインしています…");
     await uploadBackupToDrive();
     localStorage.setItem(GDRIVE_AUTOSYNC_KEY, "1");
+    const toggle = document.getElementById("autosyncToggle");
+    if (toggle) toggle.checked = true;
     showToast("Googleドライブに保存しました");
   } catch (e) {
     console.error(e);
@@ -643,6 +661,9 @@ const ICONS = {
   copy: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
   eyeOpen: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3.2"/></svg>`,
   eyeClosed: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.6 10.6 0 0 1 12 5c7 0 10.5 7 10.5 7a15.6 15.6 0 0 1-3.4 4.3M6.6 6.6C3.4 8.6 1.5 12 1.5 12S5 19 12 19a10.6 10.6 0 0 0 4.4-.94"/><path d="M9.6 9.6a3.2 3.2 0 0 0 4.5 4.5"/></svg>`,
+  gear: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13.5a7.8 7.8 0 0 0 0-3l2-1.5-2-3.4-2.3.9a7.7 7.7 0 0 0-2.6-1.5L14 2h-4l-.5 2.4a7.7 7.7 0 0 0-2.6 1.5l-2.3-.9-2 3.4 2 1.5a7.8 7.8 0 0 0 0 3l-2 1.5 2 3.4 2.3-.9c.8.7 1.6 1.2 2.6 1.5L10 22h4l.5-2.4a7.7 7.7 0 0 0 2.6-1.5l2.3.9 2-3.4-2-1.5Z"/></svg>`,
+  lockSmall: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.4" fill="currentColor" stroke="none"/></svg>`,
+  cloud: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10a4 4 0 0 0 .5-7.97A5.5 5.5 0 0 0 7.1 8.5 4 4 0 0 0 7 18Z"/></svg>`,
 };
 
 /* ========================= 自動ロック ========================= */
@@ -867,8 +888,9 @@ function renderMain() {
   return `
   <header class="top">
     <h2>Password</h2>
-    <button class="icon-btn" id="settingsBtn">⚙️</button>
-    <button class="icon-btn" id="lockBtn">🔒</button>
+    <button class="icon-btn" id="settingsBtn">${ICONS.gear}</button>
+    <button class="icon-btn" id="cloudSyncBtn">${ICONS.cloud}</button>
+    <button class="icon-btn" id="lockBtn">${ICONS.lockSmall}</button>
   </header>
   <div class="search-wrap">
     <input type="text" id="searchInput" placeholder="アカウント名で検索" value="${escapeHtml(state.search)}" />
@@ -919,6 +941,7 @@ function renderSiteCard(site) {
 
 function bindMain() {
   document.getElementById("settingsBtn").addEventListener("click", () => openSettingsSheet());
+  document.getElementById("cloudSyncBtn").addEventListener("click", () => openCloudSyncSheet());
   document.getElementById("lockBtn").addEventListener("click", lockVault);
   document.getElementById("addSiteBtn").addEventListener("click", () => openSiteSheet(null));
 
@@ -1105,22 +1128,17 @@ function openSettingsSheet() {
       <div class="sheet-handle"></div>
       <div class="sheet-title">設定</div>
       <button class="settings-item" id="changePwBtn">🔑 マスターパスワードを変更</button>
-      <button class="settings-item" id="gdriveBtn">☁️ Googleドライブに保存</button>
-      <label class="checkbox-line autosync-line">
-        <input type="checkbox" id="autosyncToggle" ${localStorage.getItem(GDRIVE_AUTOSYNC_KEY) === "1" ? "checked" : ""} />
-        アカウントの追加・編集のたびに自動でGoogleドライブに保存する
-      </label>
       <button class="settings-item" id="exportBtn">⬇️ バックアップを書き出す（暗号化済み）</button>
       <button class="settings-item" id="exportPlainBtn">📄 テキストで書き出す（暗号化なし）</button>
       <button class="settings-item" id="gdrivePlainBtn">☁️ テキストをGoogleドライブに保存（暗号化なし）</button>
-      <button class="settings-item" id="importBtn2">⬆️ バックアップから復元する</button>
+      <button class="settings-item gap-top" id="importBtn2">⬆️ バックアップファイルから復元する</button>
       <input type="file" id="importFile2" accept="application/json" />
-      <button class="settings-item gap-top" id="gdriveRestoreBtn">☁️ Googleドライブから復元する</button>
+      <button class="settings-item" id="gdriveRestoreBtn">☁️ Googleドライブから復元する</button>
       <button class="settings-item danger" id="wipeBtn">🗑️ すべてのデータを削除</button>
       <div class="settings-note">
         データはこの端末のブラウザ内にのみ、暗号化して保存されています。外部のサーバーには一切送信されません。<br>
-        Safariの「履歴とWebサイトデータを消去」を行うとデータも消えるため、定期的にバックアップの書き出しをおすすめします。「バックアップから復元する」は、今のマスターパスワードやGoogleドライブの連携設定はそのままに、アカウントの中身だけをバックアップの内容に置き換えます。<br>
-「Googleドライブに保存」を押すと、初回のみGoogleへのログイン確認が表示されます。以後は上のチェックがオンの間、アカウントを追加・編集・削除するたびに同じファイルへ自動で上書き保存され、リロードやロック解除のたびに他の端末の変更を自動で取り込みます（常時監視はしていないので、最新の状態を見たい時は都度リロードしてください）。別の端末で初めて使う場合は、セットアップ画面の「Googleドライブの既存データを引き継ぐ」で同じマスターパスワードを使うようにしてください。<br>
+        Safariの「履歴とWebサイトデータを消去」を行うとデータも消えるため、定期的にバックアップの書き出しをおすすめします。「バックアップファイルから復元する」は、今のマスターパスワードやGoogleドライブの連携設定はそのままに、アカウントの中身だけをバックアップの内容に置き換えます。<br>
+        Googleドライブとの同期の設定は、メイン画面上部の${ICONS.cloud}アイコンから行えます。<br>
         「テキストで書き出す」「テキストをGoogleドライブに保存」は、他のパスワード管理アプリへ乗り換えたい時などに、中身をそのまま読める形式（暗号化なし）で取り出す機能です。取り扱いにはご注意ください。
       </div>
       <button class="btn secondary" id="closeSettingsBtn">閉じる</button>
@@ -1130,10 +1148,6 @@ function openSettingsSheet() {
   document.getElementById("closeSettingsBtn").addEventListener("click", closeOverlay);
   document.getElementById("changePwBtn").addEventListener("click", openChangePasswordSheet);
   document.getElementById("exportBtn").addEventListener("click", exportBackup);
-  document.getElementById("gdriveBtn").addEventListener("click", saveToGoogleDrive);
-  document.getElementById("autosyncToggle").addEventListener("change", (e) => {
-    localStorage.setItem(GDRIVE_AUTOSYNC_KEY, e.target.checked ? "1" : "0");
-  });
   document.getElementById("importBtn2").addEventListener("click", () => document.getElementById("importFile2").click());
   document.getElementById("gdriveRestoreBtn").addEventListener("click", restoreFromGoogleDrive);
   document.getElementById("importFile2").addEventListener("change", handleImportFileSettings);
@@ -1146,6 +1160,32 @@ function openSettingsSheet() {
         location.reload();
       }
     }
+  });
+}
+
+/* ========================= Googleドライブ同期シート ========================= */
+function openCloudSyncSheet() {
+  const overlay = getOverlay();
+  overlay.innerHTML = `
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Googleドライブ同期</div>
+      <button class="settings-item" id="syncNowBtn">${ICONS.cloud} 今すぐ同期する</button>
+      <label class="checkbox-line autosync-line">
+        <input type="checkbox" id="autosyncToggle" ${localStorage.getItem(GDRIVE_AUTOSYNC_KEY) === "1" ? "checked" : ""} />
+        アカウントの追加・編集のたびに自動でGoogleドライブに保存する
+      </label>
+      <div class="settings-note">
+        「今すぐ同期する」を押すと、初回のみGoogleへのログイン確認が表示されます。以後は上のチェックがオンの間、アカウントを追加・編集・削除するたびに同じファイルへ自動で上書き保存され、リロードやロック解除のたびに他の端末の変更を自動で取り込みます（常時監視はしていないので、最新の状態を見たい時は都度リロードしてください）。別の端末で初めて使う場合は、セットアップ画面の「Googleドライブの既存データを引き継ぐ」で同じマスターパスワードを使うようにしてください。
+      </div>
+      <button class="btn secondary" id="closeSyncBtn">閉じる</button>
+    </div>`;
+  showOverlay();
+
+  document.getElementById("closeSyncBtn").addEventListener("click", closeOverlay);
+  document.getElementById("syncNowBtn").addEventListener("click", saveToGoogleDrive);
+  document.getElementById("autosyncToggle").addEventListener("change", (e) => {
+    localStorage.setItem(GDRIVE_AUTOSYNC_KEY, e.target.checked ? "1" : "0");
   });
 }
 
