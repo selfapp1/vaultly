@@ -159,7 +159,16 @@
     width: 76px; display: flex; align-items: center; justify-content: center; padding: 0 4px; text-align: center;
   }
   .swipe-action-btn.delete { background: var(--danger); }
-  .swipe-action-btn.rename { background: var(--accent-1); }
+
+  .icon-edit-btn {
+    appearance: none; border: none; background: none; color: var(--text-dim);
+    padding: 6px; margin: -6px 0; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .icon-edit-btn:active { color: var(--accent-1); }
+
+  .dragging { box-shadow: 0 14px 30px rgba(0,0,0,0.28); opacity: 0.96; }
+  .reorder-placeholder { border-radius: 16px; background: var(--surface-2); opacity: 0.5; }
 
   .field-row {
     display: flex; align-items: center; gap: 10px;
@@ -174,9 +183,6 @@
   .field-row .fcopy { color: var(--accent-1); font-size: 16px; padding: 4px; flex-shrink: 0; }
 
   .memo-box { font-size: 13px; color: var(--text-dim); background: var(--surface-2); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; white-space: pre-wrap; word-break: break-word; }
-
-  .card-actions { display: flex; gap: 8px; margin-top: 4px; }
-  .card-actions .btn { padding: 10px; font-size: 13px; }
 
   .fab {
     position: fixed; right: 20px; bottom: calc(24px + var(--safe-bottom));
@@ -796,6 +802,7 @@ const ICONS = {
   cloud: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h10a4 4 0 0 0 .5-7.97A5.5 5.5 0 0 0 7.1 8.5 4 4 0 0 0 7 18Z"/></svg>`,
   folder: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6l2 2.2h8.4A1.5 1.5 0 0 1 21 8.7v9.8A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5Z"/></svg>`,
   folderPlus: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6l2 2.2h8.4A1.5 1.5 0 0 1 21 8.7v9.8A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5Z"/><path d="M12 11v5M9.5 13.5h5"/></svg>`,
+  pencil: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
 };
 
 /* ========================= 自動ロック ========================= */
@@ -1054,6 +1061,7 @@ function renderFolderCard({ folder, sites }) {
           <div class="folder-name">${escapeHtml(folder.name)}</div>
           <div class="site-sub">${sites.length}件</div>
         </div>
+        ${folder.id === "__unassigned__" ? "" : `<button class="icon-edit-btn" data-rename-folder="${folder.id}" aria-label="フォルダ名を変更">${ICONS.pencil}</button>`}
         <div class="chevron">▶</div>
       </div>
       <div class="folder-body">${innerHtml}</div>
@@ -1064,7 +1072,6 @@ function renderFolderCard({ folder, sites }) {
   return `
   <div class="swipe-row" data-swipe-row>
     <div class="swipe-actions">
-      <button class="swipe-action-btn rename" data-rename-folder="${folder.id}">名前変更</button>
       <button class="swipe-action-btn delete" data-delete-folder="${folder.id}">削除</button>
     </div>
     <div class="swipe-fg">${folderCardHtml}</div>
@@ -1119,14 +1126,12 @@ function renderSiteCard(site) {
             <div class="site-name">${escapeHtml(site.name)}</div>
             <div class="site-sub">${site.entries.length}項目</div>
           </div>
+          <button class="icon-edit-btn" data-edit="${site.id}" aria-label="編集">${ICONS.pencil}</button>
           <div class="chevron">▶</div>
         </div>
         <div class="site-body">
           ${fieldsHtml}
           ${memoHtml}
-          <div class="card-actions">
-            <button class="btn secondary" data-edit="${site.id}">編集</button>
-          </div>
         </div>
       </div>
     </div>
@@ -1237,10 +1242,13 @@ function bindListEvents() {
       }
     });
   });
-  bindSwipeRows();
+  bindRowGestures();
 }
 
-/* スワイプして削除・名前変更ボタンを出す操作(アカウント行・フォルダ行共通) */
+/* 左スワイプで削除ボタンを出す/長押しして上下に動かすと並び替えできる操作(アカウント行・フォルダ行共通) */
+const LONG_PRESS_MS = 450;
+const MOVE_THRESHOLD = 8;
+
 function closeOtherSwipes(exceptRow) {
   document.querySelectorAll("[data-swipe-row]").forEach((row) => {
     if (row === exceptRow) return;
@@ -1252,56 +1260,146 @@ function closeOtherSwipes(exceptRow) {
   });
 }
 
-function bindSwipeRows() {
+function markJustInteracted(row) {
+  row.dataset.justSwiped = "1";
+  setTimeout(() => { row.dataset.justSwiped = ""; }, 260);
+}
+
+function commitReorder(parent, row) {
+  const rows = [...parent.children].filter((el) => el.matches("[data-swipe-row]"));
+  const isFolderRow = row.querySelector("[data-toggle-folder]") !== null;
+  if (isFolderRow) {
+    const newOrderIds = rows.map((r) => r.querySelector("[data-toggle-folder]").getAttribute("data-toggle-folder"));
+    const idToFolder = new Map(state.vault.folders.map((f) => [f.id, f]));
+    state.vault.folders = newOrderIds.map((id) => idToFolder.get(id)).filter(Boolean);
+  } else {
+    const newOrderIds = rows.map((r) => r.querySelector("[data-toggle-site]").getAttribute("data-toggle-site"));
+    const memberSet = new Set(newOrderIds);
+    const idToSite = new Map(state.vault.sites.map((s) => [s.id, s]));
+    let ptr = 0;
+    state.vault.sites = state.vault.sites.map((s) => (memberSet.has(s.id) ? idToSite.get(newOrderIds[ptr++]) : s));
+  }
+  persistVault().catch(() => {});
+  renderPartialList();
+}
+
+function startReorderDrag(row, head, pointerId, startClientY) {
+  const parent = row.parentElement;
+  const rect = row.getBoundingClientRect();
+  const grabOffsetY = startClientY - rect.top;
+
+  const placeholder = document.createElement("div");
+  placeholder.className = "reorder-placeholder";
+  placeholder.style.height = rect.height + "px";
+  parent.insertBefore(placeholder, row.nextSibling);
+
+  row.classList.add("dragging");
+  row.style.position = "fixed";
+  row.style.left = rect.left + "px";
+  row.style.top = rect.top + "px";
+  row.style.width = rect.width + "px";
+  row.style.zIndex = "50";
+  if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) { /* 非対応端末では何もしない */ } }
+  head.setPointerCapture(pointerId);
+
+  const onMove = (e) => {
+    const newTop = e.clientY - grabOffsetY;
+    row.style.top = newTop + "px";
+    const dragCenter = newTop + rect.height / 2;
+    const children = [...parent.children];
+    const placeholderIndex = children.indexOf(placeholder);
+    const siblings = children.filter((el) => el !== row && el !== placeholder && el.matches("[data-swipe-row]"));
+    for (const sib of siblings) {
+      const sibIndex = children.indexOf(sib);
+      const sibRect = sib.getBoundingClientRect();
+      const sibCenter = sibRect.top + sibRect.height / 2;
+      if (sibIndex > placeholderIndex && dragCenter > sibCenter) {
+        parent.insertBefore(placeholder, sib.nextSibling);
+        break;
+      } else if (sibIndex < placeholderIndex && dragCenter < sibCenter) {
+        parent.insertBefore(placeholder, sib);
+        break;
+      }
+    }
+  };
+  const onEnd = () => {
+    head.removeEventListener("pointermove", onMove);
+    head.removeEventListener("pointerup", onEnd);
+    head.removeEventListener("pointercancel", onEnd);
+    row.classList.remove("dragging");
+    row.style.position = "";
+    row.style.left = "";
+    row.style.top = "";
+    row.style.width = "";
+    row.style.zIndex = "";
+    parent.insertBefore(row, placeholder);
+    placeholder.remove();
+    markJustInteracted(row);
+    commitReorder(parent, row);
+  };
+  head.addEventListener("pointermove", onMove);
+  head.addEventListener("pointerup", onEnd);
+  head.addEventListener("pointercancel", onEnd);
+}
+
+function bindRowGestures() {
   document.querySelectorAll("[data-swipe-row]").forEach((row) => {
     const fg = row.querySelector(".swipe-fg");
     const actions = row.querySelector(".swipe-actions");
     const head = row.querySelector(".site-head, .folder-head");
     if (!fg || !actions || !head) return;
     const actionsWidth = actions.offsetWidth;
-    let startX = 0, startY = 0, startTranslate = 0, dragging = false, moved = false;
+    let startX = 0, startY = 0, startTranslate = 0;
+    let mode = "idle"; // idle | pending | swipe | reorder
+    let longPressTimer = null;
 
     const getTranslate = () => {
       const match = fg.style.transform.match(/translateX\((-?\d+(?:\.\d+)?)px\)/);
       return match ? parseFloat(match[1]) : 0;
     };
+    const clearLongPress = () => { clearTimeout(longPressTimer); longPressTimer = null; };
 
     head.addEventListener("pointerdown", (e) => {
       if (e.pointerType === "mouse" && e.button !== 0) return;
-      closeOtherSwipes(row);
       startX = e.clientX;
       startY = e.clientY;
       startTranslate = getTranslate();
-      dragging = true;
-      moved = false;
-      head.setPointerCapture(e.pointerId);
-      fg.style.transition = "none";
+      mode = "pending";
+      longPressTimer = setTimeout(() => {
+        if (mode !== "pending") return;
+        mode = "reorder";
+        closeOtherSwipes(row);
+        startReorderDrag(row, head, e.pointerId, e.clientY);
+      }, LONG_PRESS_MS);
     });
     head.addEventListener("pointermove", (e) => {
-      if (!dragging) return;
+      if (mode !== "pending" && mode !== "swipe") return;
       const dx = e.clientX - startX;
       const dy = e.clientY - startY;
-      if (!moved) {
-        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
-        if (Math.abs(dy) > Math.abs(dx)) { dragging = false; return; } // 縦スクロールを優先
-        moved = true;
+      if (mode === "pending") {
+        if (Math.abs(dx) < MOVE_THRESHOLD && Math.abs(dy) < MOVE_THRESHOLD) return;
+        clearLongPress();
+        if (Math.abs(dy) > Math.abs(dx)) { mode = "idle"; return; } // 縦の動きは画面スクロールに任せる
+        mode = "swipe";
+        closeOtherSwipes(row);
+        head.setPointerCapture(e.pointerId);
+        fg.style.transition = "none";
       }
       const next = Math.max(-actionsWidth, Math.min(0, startTranslate + dx));
       fg.style.transform = `translateX(${next}px)`;
     });
-    const endDrag = () => {
-      if (!dragging) return;
-      dragging = false;
-      fg.style.transition = "transform .2s ease";
-      if (moved) {
+    const endGesture = () => {
+      clearLongPress();
+      if (mode === "swipe") {
+        fg.style.transition = "transform .2s ease";
         const current = getTranslate();
         fg.style.transform = current < -actionsWidth / 2 ? `translateX(${-actionsWidth}px)` : "translateX(0px)";
-        row.dataset.justSwiped = "1";
-        setTimeout(() => { row.dataset.justSwiped = ""; }, 260);
+        markJustInteracted(row);
       }
+      mode = "idle";
     };
-    head.addEventListener("pointerup", endDrag);
-    head.addEventListener("pointercancel", endDrag);
+    head.addEventListener("pointerup", endGesture);
+    head.addEventListener("pointercancel", endGesture);
   });
 }
 
