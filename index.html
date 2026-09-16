@@ -496,11 +496,19 @@ async function uploadContentToDrive(filename, mimeType, content, cacheKey) {
 
 const GDRIVE_KNOWN_MODIFIED_KEY = "pv_gdrive_known_modified_time";
 
-async function uploadBackupToDrive() {
-  const store = loadStore();
-  const payload = JSON.stringify({ app: "passvault", version: 1, ...store }, null, 2);
-  const modifiedTime = await uploadContentToDrive(GDRIVE_BACKUP_FILENAME, "application/json", payload, GDRIVE_FILE_ID_KEY);
-  if (modifiedTime) localStorage.setItem(GDRIVE_KNOWN_MODIFIED_KEY, modifiedTime);
+/* 保存を1件ずつ順番に行うためのキュー。並行して複数走らせると、通信の
+   到着順が前後して古い内容が新しい内容を上書きしてしまうことがあるため、
+   手動保存・自動保存を問わず必ず前の保存が終わってから次を始める。 */
+let gdriveSyncQueue = Promise.resolve();
+function uploadBackupToDrive() {
+  const task = gdriveSyncQueue.then(async () => {
+    const store = loadStore();
+    const payload = JSON.stringify({ app: "passvault", version: 1, ...store }, null, 2);
+    const modifiedTime = await uploadContentToDrive(GDRIVE_BACKUP_FILENAME, "application/json", payload, GDRIVE_FILE_ID_KEY);
+    if (modifiedTime) localStorage.setItem(GDRIVE_KNOWN_MODIFIED_KEY, modifiedTime);
+  });
+  gdriveSyncQueue = task.catch(() => {});
+  return task;
 }
 
 async function saveToGoogleDrive() {
@@ -1107,7 +1115,7 @@ function openSettingsSheet() {
       <div class="settings-note">
         データはこの端末のブラウザ内にのみ、暗号化して保存されています。外部のサーバーには一切送信されません。<br>
         Safariの「履歴とWebサイトデータを消去」を行うとデータも消えるため、定期的にバックアップの書き出しをおすすめします。「バックアップから復元する」は、今のマスターパスワードやGoogleドライブの連携設定はそのままに、アカウントの中身だけをバックアップの内容に置き換えます。<br>
-「Googleドライブに保存」を押すと、初回のみGoogleへのログイン確認が表示されます。以後は上のチェックがオンの間、アカウントを追加・編集・削除するたびに同じファイルへ自動で上書き保存され、リロードやロック解除のたびに他の端末の変更を自動で取り込みます（常時監視はしていないので、最新の状態を見たい時は都度リロードしてください）。別の端末で初めて使う場合は、セットアップ画面の「Googleドライブの既存データを引き継ぐ」で同じマスターパスワードを使うようにしてください。マスターパスワードは、一度解除すると${UNLOCK_CACHE_HOURS}時間はタブを閉じても再入力不要です。<br>
+「Googleドライブに保存」を押すと、初回のみGoogleへのログイン確認が表示されます。以後は上のチェックがオンの間、アカウントを追加・編集・削除するたびに同じファイルへ自動で上書き保存され、リロードやロック解除のたびに他の端末の変更を自動で取り込みます（常時監視はしていないので、最新の状態を見たい時は都度リロードしてください）。別の端末で初めて使う場合は、セットアップ画面の「Googleドライブの既存データを引き継ぐ」で同じマスターパスワードを使うようにしてください。<br>
         「テキストで書き出す」「テキストをGoogleドライブに保存」は、他のパスワード管理アプリへ乗り換えたい時などに、中身をそのまま読める形式（暗号化なし）で取り出す機能です。取り扱いにはご注意ください。
       </div>
       <button class="btn secondary" id="closeSettingsBtn">閉じる</button>
