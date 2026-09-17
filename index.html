@@ -12,7 +12,6 @@
 <link rel="manifest" href="manifest.json" />
 <link rel="apple-touch-icon" href="icons/icon-180.png" />
 <link rel="icon" href="icons/icon-192.png" />
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://apis.google.com/js/api.js" async defer></script>
 <style>
   :root {
@@ -395,7 +394,6 @@ const GDRIVE_CLIENT_ID = "151024751905-f74rcgi65ao8149pqrujusjeb7lq5ohv.apps.goo
 const GDRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 const GDRIVE_FOLDER_KEY = "pv_gdrive_folder_id";
 const GDRIVE_TOKEN_CACHE_KEY = "pv_gdrive_token_cache";
-let gdriveTokenClient = null;
 let gdriveAccessToken = loadCachedGdriveToken();
 
 /* Googleへの許可情報をタブが閉じるまで保持する(リロードのたびに聞き直さないため) */
@@ -422,74 +420,70 @@ function clearCachedGdriveToken() {
   sessionStorage.removeItem(GDRIVE_TOKEN_CACHE_KEY);
 }
 
-function ensureGdriveTokenClient() {
-  if (gdriveTokenClient) return gdriveTokenClient;
-  if (!window.google || !google.accounts || !google.accounts.oauth2) {
-    throw new Error("Googleログインの読み込みに失敗しました。通信環境を確認してもう一度お試しください。");
-  }
-  gdriveTokenClient = google.accounts.oauth2.initTokenClient({
+/* ========================= Google連携(画面ごと切り替わるリダイレクト方式) =========================
+   ポップアップ方式は、ホーム画面に追加した状態(ウェブアプリ化)ではブロックされて
+   何も起きないまま固まることがあるため、ポップアップを一切使わず、画面ごとGoogleの
+   サインインページに切り替わり、終わったらこのアプリに戻ってくる方式にしている。 */
+const GDRIVE_REDIRECT_URI = location.origin + location.pathname;
+const GDRIVE_RESUME_SYNC_KEY = "pv_gdrive_resume_sync";
+
+function buildGdriveAuthUrl() {
+  const params = new URLSearchParams({
     client_id: GDRIVE_CLIENT_ID,
+    redirect_uri: GDRIVE_REDIRECT_URI,
+    response_type: "token",
     scope: GDRIVE_SCOPE,
-    callback: () => {},
+    include_granted_scopes: "true",
+    prompt: "consent",
   });
-  return gdriveTokenClient;
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 
-/* Googleのサインインポップアップがブロックされる等で応答が返ってこない場合、
-   何もエラーが出ないまま永遠に固まってしまうことがあるため、必ずタイムアウトで打ち切る */
-function requestGdriveTokenWithPrompt(promptValue) {
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      reject(new Error("gdrive-token-timeout"));
-    }, 20000);
-    try {
-      const client = ensureGdriveTokenClient();
-      client.callback = (resp) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        if (resp.error) { reject(new Error(resp.error)); return; }
-        gdriveAccessToken = resp.access_token;
-        cacheGdriveToken(resp.access_token, resp.expires_in);
-        resolve(resp.access_token);
-      };
-      client.requestAccessToken({ prompt: promptValue });
-    } catch (e) {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      reject(e);
-    }
-  });
+/* Googleとの連携が必要な操作を行った本人の操作(ボタン・確認ダイアログのOK)からだけ呼ぶこと。
+   画面ごとGoogleへ切り替わるため、呼んだ時点でこの関数から戻ってくることはない。 */
+function redirectToGoogleSignIn() {
+  localStorage.setItem(GDRIVE_RESUME_SYNC_KEY, "1");
+  window.location.href = buildGdriveAuthUrl();
 }
 
-/* 前回許可した実績があれば、まずポップアップなしでの再認可を試み、
-   ダメだった時だけ確認画面を出す(毎回聞かれるのを避けるため) */
-async function requestGdriveToken() {
-  try {
-    return await requestGdriveTokenWithPrompt("");
-  } catch (e) {
-    return await requestGdriveTokenWithPrompt("consent");
+/* アプリの起動時に1回だけ呼ぶ。Googleから戻ってきた直後であれば、
+   URLの#以降にアクセストークンが入っているので取り出してから、URLをきれいに戻す */
+function consumeGdriveRedirectToken() {
+  const hash = window.location.hash;
+  if (!hash || hash.length < 2 || !hash.includes("access_token=")) return false;
+  const params = new URLSearchParams(hash.slice(1));
+  const token = params.get("access_token");
+  const expiresIn = params.get("expires_in");
+  history.replaceState(null, "", window.location.pathname + window.location.search);
+  if (!token) return false;
+  gdriveAccessToken = token;
+  cacheGdriveToken(token, Number(expiresIn) || 3500);
+  return true;
+}
+
+/* Googleとの連携が切れている時に呼ぶ。OKされたらそのままGoogleのサインイン画面へ切り替わる */
+function offerGdriveReconnect() {
+  if (confirm("Googleとの連携が解除されています。\n\n再連携しますか？")) {
+    redirectToGoogleSignIn();
   }
 }
 
 async function gdriveFetch(url, options = {}) {
-  const token = gdriveAccessToken || (await requestGdriveToken());
-  let res = await fetch(url, {
+  if (!gdriveAccessToken) {
+    const err = new Error("gdrive-auth-required");
+    err.code = "gdrive-auth-required";
+    throw err;
+  }
+  const res = await fetch(url, {
     ...options,
-    headers: { ...(options.headers || {}), Authorization: `Bearer ${token}` },
+    headers: { ...(options.headers || {}), Authorization: `Bearer ${gdriveAccessToken}` },
   });
   if (res.status === 401) {
     gdriveAccessToken = null;
     clearCachedGdriveToken();
-    const newToken = await requestGdriveToken();
-    res = await fetch(url, {
-      ...options,
-      headers: { ...(options.headers || {}), Authorization: `Bearer ${newToken}` },
-    });
+    const err = new Error("gdrive-auth-required");
+    err.code = "gdrive-auth-required";
+    throw err;
   }
   return res;
 }
@@ -534,12 +528,13 @@ async function pickGdriveFolder() {
   const mode = await chooseGdriveFolderMode();
   if (mode === "root") return "root";
 
-  // フォルダを選ぶボタンを押した直後、真っ先にGoogleへの認可を試みる
-  // (フォルダ選択UIの読み込みを先に待ってしまうと、ボタンを押した操作から
-  //  時間的に離れてしまい、認可ポップアップがブロックされることがあるため)
-  const tokenPromise = gdriveAccessToken ? Promise.resolve(gdriveAccessToken) : requestGdriveToken();
+  if (!gdriveAccessToken) {
+    const err = new Error("gdrive-auth-required");
+    err.code = "gdrive-auth-required";
+    throw err;
+  }
   await ensureGdrivePicker();
-  const token = await tokenPromise;
+  const token = gdriveAccessToken;
   return new Promise((resolve, reject) => {
     const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
       .setParent("root")
@@ -581,7 +576,9 @@ async function repickGdriveFolder() {
     localStorage.removeItem(GDRIVE_KNOWN_MODIFIED_KEY);
     showToast("保存先フォルダを変更しました");
   } catch (e) {
-    if (!(e && e.message === "folder-pick-cancelled")) {
+    if (e && e.code === "gdrive-auth-required") {
+      offerGdriveReconnect();
+    } else if (!(e && e.message === "folder-pick-cancelled")) {
       console.error(e);
       alert("フォルダの選択に失敗しました。\n\nもう一度お試しください。");
     }
@@ -677,13 +674,9 @@ async function gdriveBackupHasData() {
 }
 
 async function saveToGoogleDrive() {
+  if (!gdriveAccessToken) { offerGdriveReconnect(); return; }
   try {
     showToast("Googleにサインインしています…");
-    // ボタンを押した直後、真っ先にGoogleへの認可を済ませる。
-    // ここで一旦他の処理(順番待ちのキューなど)を挟んでから認可しようとすると、
-    // ボタンを押した操作から時間的に離れてしまい、Safari等にポップアップとして
-    // 認識してもらえずブロックされ、何も起きないまま固まることがあるため。
-    if (!gdriveAccessToken) await requestGdriveToken();
     await uploadBackupToDrive();
     localStorage.setItem(GDRIVE_AUTOSYNC_KEY, "1");
     const toggle = document.getElementById("autosyncToggle");
@@ -692,6 +685,10 @@ async function saveToGoogleDrive() {
   } catch (e) {
     if (e.code === "sync-cancelled") {
       showToast("キャンセルしました");
+      return;
+    }
+    if (e.code === "gdrive-auth-required") {
+      offerGdriveReconnect();
       return;
     }
     console.error(e);
@@ -722,12 +719,16 @@ async function downloadBackupFromDrive() {
 }
 
 async function restoreFromGoogleDrive() {
+  if (!gdriveAccessToken) { offerGdriveReconnect(); return; }
   try {
     showToast("Googleドライブから確認しています…");
-    if (!gdriveAccessToken) await requestGdriveToken();
     const { backupStore } = await downloadBackupFromDrive();
     openRestorePasswordSheet(backupStore);
   } catch (e) {
+    if (e.code === "gdrive-auth-required") {
+      offerGdriveReconnect();
+      return;
+    }
     console.error(e);
     if (e.code === "no-backup-found") {
       alert("Googleドライブにバックアップが見つかりませんでした。\n\n先に別の端末で「Googleドライブに保存」を行ってください。");
@@ -790,10 +791,15 @@ async function autoPullAndRefresh() {
 /* アカウントの追加・編集・削除のたびに自動で呼ばれる(接続済みの場合のみ) */
 async function autoSyncToGoogleDrive() {
   if (localStorage.getItem(GDRIVE_AUTOSYNC_KEY) !== "1") return;
+  if (!gdriveAccessToken) { offerGdriveReconnect(); return; }
   try {
     await uploadBackupToDrive();
   } catch (e) {
     if (e.code === "sync-cancelled") return; // ユーザーが上書きを拒否しただけなので失敗扱いにしない
+    if (e.code === "gdrive-auth-required") {
+      offerGdriveReconnect();
+      return;
+    }
     console.error(e);
     showToast("Googleドライブへの自動保存に失敗しました");
   }
@@ -1930,14 +1936,18 @@ async function savePlainTextToGoogleDrive() {
     "続けますか？"
   );
   if (!ok) return;
+  if (!gdriveAccessToken) { offerGdriveReconnect(); return; }
 
   try {
     showToast("Googleにサインインしています…");
-    if (!gdriveAccessToken) await requestGdriveToken();
     const text = buildPlainTextExport();
     await uploadContentToDrive(GDRIVE_PLAIN_FILENAME, "text/plain; charset=UTF-8", text, GDRIVE_PLAIN_FILE_ID_KEY);
     showToast("Googleドライブに保存しました");
   } catch (e) {
+    if (e.code === "gdrive-auth-required") {
+      offerGdriveReconnect();
+      return;
+    }
     console.error(e);
     alert("Googleドライブへの保存に失敗しました。\n\nもう一度お試しください。");
   }
@@ -2067,10 +2077,19 @@ function render() {
 }
 
 (async () => {
+  const returnedFromGoogle = consumeGdriveRedirectToken();
   const unlocked = await tryAutoUnlock();
   if (unlocked) {
     resetIdleTimer();
     autoPullAndRefresh();
+    if (returnedFromGoogle && localStorage.getItem(GDRIVE_RESUME_SYNC_KEY) === "1") {
+      localStorage.removeItem(GDRIVE_RESUME_SYNC_KEY);
+      localStorage.setItem(GDRIVE_AUTOSYNC_KEY, "1"); // Googleと再連携したので、以後の自動同期も有効にしておく
+      showToast("Googleと再連携しました");
+      autoSyncToGoogleDrive(); // 再連携前にやろうとしていた同期を、続けて行う
+    }
+  } else if (returnedFromGoogle) {
+    localStorage.removeItem(GDRIVE_RESUME_SYNC_KEY);
   }
   render();
 })();
