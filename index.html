@@ -524,8 +524,12 @@ async function pickGdriveFolder() {
   const mode = await chooseGdriveFolderMode();
   if (mode === "root") return "root";
 
+  // フォルダを選ぶボタンを押した直後、真っ先にGoogleへの認可を試みる
+  // (フォルダ選択UIの読み込みを先に待ってしまうと、ボタンを押した操作から
+  //  時間的に離れてしまい、認可ポップアップがブロックされることがあるため)
+  const tokenPromise = gdriveAccessToken ? Promise.resolve(gdriveAccessToken) : requestGdriveToken();
   await ensureGdrivePicker();
-  const token = gdriveAccessToken || (await requestGdriveToken());
+  const token = await tokenPromise;
   return new Promise((resolve, reject) => {
     const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
       .setParent("root")
@@ -665,6 +669,11 @@ async function gdriveBackupHasData() {
 async function saveToGoogleDrive() {
   try {
     showToast("Googleにサインインしています…");
+    // ボタンを押した直後、真っ先にGoogleへの認可を済ませる。
+    // ここで一旦他の処理(順番待ちのキューなど)を挟んでから認可しようとすると、
+    // ボタンを押した操作から時間的に離れてしまい、Safari等にポップアップとして
+    // 認識してもらえずブロックされ、何も起きないまま固まることがあるため。
+    if (!gdriveAccessToken) await requestGdriveToken();
     await uploadBackupToDrive();
     localStorage.setItem(GDRIVE_AUTOSYNC_KEY, "1");
     const toggle = document.getElementById("autosyncToggle");
@@ -705,6 +714,7 @@ async function downloadBackupFromDrive() {
 async function restoreFromGoogleDrive() {
   try {
     showToast("Googleドライブから確認しています…");
+    if (!gdriveAccessToken) await requestGdriveToken();
     const { backupStore } = await downloadBackupFromDrive();
     openRestorePasswordSheet(backupStore);
   } catch (e) {
@@ -1864,6 +1874,7 @@ async function savePlainTextToGoogleDrive() {
 
   try {
     showToast("Googleにサインインしています…");
+    if (!gdriveAccessToken) await requestGdriveToken();
     const text = buildPlainTextExport();
     await uploadContentToDrive(GDRIVE_PLAIN_FILENAME, "text/plain; charset=UTF-8", text, GDRIVE_PLAIN_FILE_ID_KEY);
     showToast("Googleドライブに保存しました");
