@@ -246,11 +246,13 @@
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   .settings-item {
-    display: block; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--border);
     border-radius: 12px; padding: 13px 14px; margin-bottom: 10px; color: var(--text); font-size: 14.5px; font-weight: 600;
     cursor: pointer;
   }
+  .settings-item .si-icon { display: flex; flex-shrink: 0; color: var(--text-dim); }
   .settings-item.danger { color: var(--danger); }
+  .settings-item.danger .si-icon { color: var(--danger); }
   .settings-item.gap-top { margin-top: 20px; }
   .autosync-line {
     display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-dim);
@@ -503,8 +505,8 @@ function chooseGdriveFolderMode() {
       <div class="sheet">
         <div class="sheet-handle"></div>
         <div class="sheet-title">保存先を選択</div>
-        <button class="settings-item" id="pickRootBtn">📁 マイドライブ直下に保存する</button>
-        <button class="settings-item" id="pickBrowseBtn">🗂️ 既存のフォルダから選ぶ</button>
+        <button class="settings-item" id="pickRootBtn"><span class="si-icon">${ICONS.folder}</span>マイドライブ直下に保存する</button>
+        <button class="settings-item" id="pickBrowseBtn"><span class="si-icon">${ICONS.folder}</span>既存のフォルダから選ぶ</button>
         <button class="btn secondary" id="cancelPickModeBtn">キャンセル</button>
       </div>`;
     showOverlay();
@@ -837,6 +839,11 @@ const ICONS = {
   folder: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6l2 2.2h8.4A1.5 1.5 0 0 1 21 8.7v9.8A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5Z"/></svg>`,
   folderPlus: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.6l2 2.2h8.4A1.5 1.5 0 0 1 21 8.7v9.8A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5Z"/><path d="M12 11v5M9.5 13.5h5"/></svg>`,
   pencil: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
+  key: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="3.3"/><path d="M9.8 13.2 18.5 4.5"/><path d="M14.5 8.5l2.3 2.3"/><path d="M17 6l2.3 2.3"/></svg>`,
+  download: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M8 11.5 12 15.5 16 11.5"/><path d="M5 19.5h14"/></svg>`,
+  upload: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V9"/><path d="M8 12.5 12 8.5 16 12.5"/><path d="M5 4.5h14"/></svg>`,
+  trash: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4.8a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V7"/><path d="M6.5 7 7.3 19.3a1.5 1.5 0 0 0 1.5 1.4h6.4a1.5 1.5 0 0 0 1.5-1.4L17.5 7"/><path d="M10 11v6M14 11v6"/></svg>`,
+  document: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.8h6.2l3.8 3.8V19.5a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.8a1 1 0 0 1 1-1Z"/><path d="M13.2 3.8v3.8h3.8"/><path d="M9 12.2h6M9 15.6h6"/></svg>`,
 };
 
 /* ========================= 自動ロック ========================= */
@@ -1660,14 +1667,14 @@ function openSettingsSheet() {
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title">設定</div>
-      <button class="settings-item" id="changePwBtn">🔑 マスターパスワードを変更</button>
-      <button class="settings-item" id="exportBtn">⬇️ バックアップを書き出す（暗号化済み）</button>
-      <button class="settings-item" id="exportPlainBtn">📄 テキストで書き出す（暗号化なし）</button>
-      <button class="settings-item" id="gdrivePlainBtn">☁️ テキストをGoogleドライブに保存（暗号化なし）</button>
-      <button class="settings-item gap-top" id="importBtn2">⬆️ バックアップファイルから復元する</button>
+      <button class="settings-item" id="changePwBtn"><span class="si-icon">${ICONS.key}</span>マスターパスワードを変更</button>
+      <button class="settings-item" id="exportBtn"><span class="si-icon">${ICONS.download}</span>バックアップを書き出す（暗号化済み）</button>
+      <button class="settings-item" id="exportPlainBtn"><span class="si-icon">${ICONS.document}</span>テキストで書き出す（暗号化なし）</button>
+      <button class="settings-item" id="gdrivePlainBtn"><span class="si-icon">${ICONS.cloud}</span>テキストをGoogleドライブに保存（暗号化なし）</button>
+      <button class="settings-item gap-top" id="importBtn2"><span class="si-icon">${ICONS.upload}</span>バックアップファイルから復元する</button>
       <input type="file" id="importFile2" accept="application/json" />
-      <button class="settings-item" id="gdriveRestoreBtn">☁️ Googleドライブから復元する</button>
-      <button class="settings-item danger" id="wipeBtn">🗑️ すべてのデータを削除</button>
+      <button class="settings-item" id="gdriveRestoreBtn"><span class="si-icon">${ICONS.cloud}</span>Googleドライブから復元する</button>
+      <button class="settings-item danger" id="wipeBtn"><span class="si-icon">${ICONS.trash}</span>すべてのデータを削除</button>
       <div class="settings-note">
         データはこの端末に暗号化して保存され、外部には送信されません。Safariの「履歴とデータを消去」で消えるため、定期的なバックアップをおすすめします。Googleドライブの同期設定は、上部の${ICONS.cloud}アイコンから行えます。
       </div>
@@ -1705,7 +1712,7 @@ function openCloudSyncSheet() {
         <input type="checkbox" id="autosyncToggle" ${localStorage.getItem(GDRIVE_AUTOSYNC_KEY) === "1" ? "checked" : ""} />
         アカウントの追加・編集のたびに自動でGoogleドライブに保存する
       </label>
-      <button class="settings-item" id="repickFolderBtn">📁 保存先フォルダを選び直す</button>
+      <button class="settings-item" id="repickFolderBtn"><span class="si-icon">${ICONS.folder}</span>保存先フォルダを選び直す</button>
       <div class="settings-note">
         「今すぐ同期する」を押すと、初回のみGoogleへのログイン確認と、保存先フォルダを選ぶ画面が表示されます。以後は上のチェックがオンの間、アカウントを追加・編集・削除するたびに同じファイルへ自動で上書き保存され、リロードやロック解除のたびに他の端末の変更を自動で取り込みます（常時監視はしていないので、最新の状態を見たい時は都度リロードしてください）。別の端末で初めて使う場合は、セットアップ画面の「Googleドライブの既存データを引き継ぐ」で同じマスターパスワードを使うようにしてください。<br>
         「保存先フォルダを選び直す」は、これ以降の保存先だけを変更します。今まで保存していたファイルは移動しません。
