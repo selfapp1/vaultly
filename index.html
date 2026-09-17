@@ -425,11 +425,22 @@ function ensureGdriveTokenClient() {
   return gdriveTokenClient;
 }
 
+/* Googleのサインインポップアップがブロックされる等で応答が返ってこない場合、
+   何もエラーが出ないまま永遠に固まってしまうことがあるため、必ずタイムアウトで打ち切る */
 function requestGdriveTokenWithPrompt(promptValue) {
   return new Promise((resolve, reject) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(new Error("gdrive-token-timeout"));
+    }, 20000);
     try {
       const client = ensureGdriveTokenClient();
       client.callback = (resp) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
         if (resp.error) { reject(new Error(resp.error)); return; }
         gdriveAccessToken = resp.access_token;
         cacheGdriveToken(resp.access_token, resp.expires_in);
@@ -437,6 +448,9 @@ function requestGdriveTokenWithPrompt(promptValue) {
       };
       client.requestAccessToken({ prompt: promptValue });
     } catch (e) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
       reject(e);
     }
   });
@@ -719,6 +733,12 @@ async function checkAndPullFromDrive() {
     if (!metaRes.ok) return false;
     const meta = await metaRes.json();
     if (localStorage.getItem(GDRIVE_KNOWN_MODIFIED_KEY) === meta.modifiedTime) return false; // 変化なし
+
+    // この端末に既にアカウントが登録されている場合、Googleドライブの内容で無条件に
+    // 上書きすると、同期が途中で止まった時などにこの端末のデータが消えてしまう恐れがある。
+    // そのため自動での取り込みは、この端末が空っぽ(新しい端末で初めて受け取る場合)の時だけに限る。
+    // それ以外は設定画面の「Googleドライブから復元する」で本人の意思で明示的に行ってもらう。
+    if (state.vault.sites.length > 0) return false;
 
     const contentRes = await gdriveFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
     if (!contentRes.ok) return false;
