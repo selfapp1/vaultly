@@ -620,8 +620,12 @@ let gdriveSyncQueue = Promise.resolve();
 function uploadBackupToDrive() {
   const task = gdriveSyncQueue.then(async () => {
     if (state.vault && state.vault.sites.length === 0 && (await gdriveBackupHasData())) {
-      const proceed = confirm("Googleドライブには登録済みのデータがありますが、今この端末のデータは空っぽです。このままGoogleドライブのバックアップも空にしてよろしいですか？");
-      if (!proceed) return;
+      const proceed = confirm("Googleドライブには登録済みのデータがありますが、この端末のデータは空です。このままGoogleドライブのバックアップも空にしてよろしいですか？");
+      if (!proceed) {
+        const err = new Error("sync-cancelled");
+        err.code = "sync-cancelled";
+        throw err;
+      }
     }
     const store = loadStore();
     const payload = JSON.stringify({ app: "passvault", version: 1, ...store }, null, 2);
@@ -653,6 +657,10 @@ async function saveToGoogleDrive() {
     if (toggle) toggle.checked = true;
     showToast("Googleドライブに保存しました");
   } catch (e) {
+    if (e.code === "sync-cancelled") {
+      showToast("キャンセルしました");
+      return;
+    }
     console.error(e);
     alert("Googleドライブへの保存に失敗しました。もう一度お試しください。");
   }
@@ -745,6 +753,7 @@ async function autoSyncToGoogleDrive() {
   try {
     await uploadBackupToDrive();
   } catch (e) {
+    if (e.code === "sync-cancelled") return; // ユーザーが上書きを拒否しただけなので失敗扱いにしない
     console.error(e);
     showToast("Googleドライブへの自動保存に失敗しました");
   }
