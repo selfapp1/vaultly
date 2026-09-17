@@ -117,11 +117,6 @@
     margin-bottom: 12px; overflow: hidden;
   }
   .site-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px; cursor: pointer; }
-  .avatar {
-    width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
-    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-    color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;
-  }
   .site-name-wrap { flex: 1; min-width: 0; }
   .site-name { font-weight: 700; font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .site-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
@@ -1043,10 +1038,6 @@ function bindUnlock() {
 }
 
 /* ========================= 画面: メイン ========================= */
-function siteInitial(name) {
-  return (name || "?").trim().charAt(0).toUpperCase() || "?";
-}
-
 function normalizeForSearch(s) {
   return String(s ?? "").normalize("NFKC").toLowerCase();
 }
@@ -1160,10 +1151,8 @@ function renderSiteCard(site) {
     <div class="swipe-fg">
       <div class="site-card ${isOpen ? "open" : ""}" data-site="${site.id}">
         <div class="site-head" data-toggle-site="${site.id}">
-          <div class="avatar">${escapeHtml(siteInitial(site.name))}</div>
           <div class="site-name-wrap">
             <div class="site-name">${escapeHtml(site.name)}</div>
-            <div class="site-sub">${site.entries.length}項目</div>
           </div>
           <button class="icon-edit-btn" data-edit="${site.id}" aria-label="編集">${ICONS.pencil}</button>
           <div class="chevron">▶</div>
@@ -1680,10 +1669,7 @@ function openSettingsSheet() {
       <button class="settings-item" id="gdriveRestoreBtn">☁️ Googleドライブから復元する</button>
       <button class="settings-item danger" id="wipeBtn">🗑️ すべてのデータを削除</button>
       <div class="settings-note">
-        データはこの端末のブラウザ内にのみ、暗号化して保存されています。外部のサーバーには一切送信されません。<br>
-        Safariの「履歴とWebサイトデータを消去」を行うとデータも消えるため、定期的にバックアップの書き出しをおすすめします。「バックアップファイルから復元する」は、今のマスターパスワードやGoogleドライブの連携設定はそのままに、アカウントの中身だけをバックアップの内容に置き換えます。<br>
-        Googleドライブとの同期の設定は、メイン画面上部の${ICONS.cloud}アイコンから行えます。<br>
-        「テキストで書き出す」「テキストをGoogleドライブに保存」は、他のパスワード管理アプリへ乗り換えたい時などに、中身をそのまま読める形式（暗号化なし）で取り出す機能です。取り扱いにはご注意ください。
+        データはこの端末に暗号化して保存され、外部には送信されません。Safariの「履歴とデータを消去」で消えるため、定期的なバックアップをおすすめします。Googleドライブの同期設定は、上部の${ICONS.cloud}アイコンから行えます。
       </div>
       <button class="btn secondary" id="closeSettingsBtn">閉じる</button>
     </div>`;
