@@ -16,15 +16,16 @@
 <script src="https://apis.google.com/js/api.js" async defer></script>
 <style>
   :root {
-    --bg: #0f1115;
-    --surface: #171a21;
-    --surface-2: #1f2330;
-    --border: #2a2f3d;
-    --text: #eef0f4;
-    --text-dim: #b3b8e2;
-    --accent-1: #6366f1;
-    --accent-2: #a855f7;
-    --danger: #f87171;
+    --bg: #000000;
+    --surface: #1c1c1e;
+    --surface-2: #2c2c2e;
+    --border: #262629;
+    --text: #ffffff;
+    --text-dim: #8e8e93;
+    --accent-1: #ffffff;
+    --accent-2: #d8d8dc;
+    --accent-ink: #08090c;
+    --danger: #ff453a;
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
@@ -38,7 +39,7 @@
   }
   #app { min-height: 100%; padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
   input, textarea, button { font-family: inherit; }
-  ::selection { background: var(--accent-1); color: #fff; }
+  ::selection { background: var(--accent-1); color: var(--accent-ink); }
 
   .center-screen {
     min-height: 100vh;
@@ -49,9 +50,10 @@
   .logo-badge {
     width: 72px; height: 72px; border-radius: 20px;
     background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: var(--accent-ink);
     display: flex; align-items: center; justify-content: center;
     font-size: 32px; margin-bottom: 18px;
-    box-shadow: 0 10px 30px rgba(99,102,241,0.35);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
   }
   h1.title { font-size: 22px; margin: 0 0 6px; font-weight: 700; }
   p.subtitle { color: var(--text-dim); font-size: 14px; margin: 0 0 28px; line-height: 1.6; }
@@ -69,24 +71,24 @@
   .btn {
     appearance: none; border: none; cursor: pointer;
     padding: 14px 20px; border-radius: 14px; font-size: 15px; font-weight: 700;
-    width: 100%; max-width: 340px; color: #fff;
+    width: 100%; max-width: 340px; color: var(--accent-ink);
     background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-    box-shadow: 0 8px 20px rgba(99,102,241,0.28);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
   }
   .btn:active { transform: scale(0.98); }
   .btn.secondary {
     background: var(--surface-2); color: var(--text); box-shadow: none; border: 1px solid var(--border);
   }
   .btn.ghost { background: transparent; box-shadow: none; color: var(--accent-1); font-weight: 600; padding: 10px; }
-  .btn.danger { background: var(--danger); box-shadow: none; }
+  .btn.danger { background: var(--danger); color: #fff; box-shadow: none; }
   .btn-row { display: flex; gap: 10px; width: 100%; max-width: 340px; }
   .btn-row .btn { width: auto; flex: 1; }
 
   .error-msg { color: var(--danger); font-size: 13px; min-height: 18px; margin: -4px 0 10px; }
   .warn-box {
-    max-width: 340px; text-align: left; background: rgba(248,113,113,0.08);
-    border: 1px solid rgba(248,113,113,0.35); border-radius: 12px; padding: 12px 14px;
-    font-size: 12.5px; color: #f2a4a4; line-height: 1.6; margin-bottom: 20px;
+    max-width: 340px; text-align: left; background: rgba(255,69,58,0.1);
+    border: 1px solid rgba(255,69,58,0.35); border-radius: 12px; padding: 12px 14px;
+    font-size: 12.5px; color: #ff8078; line-height: 1.6; margin-bottom: 20px;
   }
 
   /* ---- Main screen ---- */
@@ -98,10 +100,11 @@
   }
   header.top h2 { font-size: 20px; margin: 0; flex: 1; font-weight: 800; }
   .icon-btn {
-    width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--border);
+    width: 44px; height: 44px; border-radius: 13px; border: 1px solid var(--border);
     background: var(--surface); color: var(--text); display: flex; align-items: center; justify-content: center;
     font-size: 17px; cursor: pointer;
   }
+  .icon-btn svg { width: 21px; height: 21px; }
   .search-wrap { padding: 0 16px 10px; display: flex; gap: 8px; align-items: center; }
   .search-wrap input {
     flex: 1; min-width: 0; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--border);
@@ -132,9 +135,9 @@
   }
   .folder-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px; cursor: pointer; }
   .folder-icon {
-    width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
-    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-    color: #fff; display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+    border: 1.6px solid var(--icon-color, var(--text-dim)); color: var(--icon-color, var(--text-dim));
+    display: flex; align-items: center; justify-content: center;
   }
   .folder-name-wrap { flex: 1; min-width: 0; }
   .folder-name { font-weight: 700; font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -145,8 +148,8 @@
   .folder-body .swipe-row { margin-bottom: 10px; }
   .folder-body .swipe-row:last-child { margin-bottom: 0; }
 
-  .swipe-row { position: relative; overflow: hidden; border-radius: 16px; margin-bottom: 12px; }
-  .swipe-row .swipe-fg { position: relative; z-index: 1; }
+  .swipe-row { position: relative; overflow: hidden; border-radius: 16px; margin-bottom: 12px; background: var(--bg); }
+  .swipe-row .swipe-fg { position: relative; z-index: 1; background: var(--bg); border-radius: 16px; }
   .swipe-row .swipe-fg .site-card, .swipe-row .swipe-fg .folder-card { margin-bottom: 0; }
   .swipe-actions { position: absolute; top: 0; right: 0; bottom: 0; display: flex; z-index: 0; }
   .swipe-action-btn {
@@ -183,7 +186,7 @@
     position: fixed; right: 20px; bottom: calc(24px + var(--safe-bottom));
     width: 58px; height: 58px; border-radius: 20px; border: none;
     background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-    color: #fff; font-size: 26px; box-shadow: 0 10px 24px rgba(99,102,241,0.4);
+    color: var(--accent-ink); font-size: 26px; box-shadow: 0 10px 24px rgba(0,0,0,0.45);
     display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 6;
   }
   .fab:active { transform: scale(0.95); }
@@ -214,14 +217,24 @@
   }
   .sfield textarea { resize: vertical; min-height: 60px; }
   .sfield input:focus, .sfield textarea:focus, .sfield select:focus { border-color: var(--accent-1); }
+
+  .icon-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+  .icon-picker-btn {
+    appearance: none; width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; cursor: pointer;
+    border: 1.6px solid var(--icon-color); color: var(--icon-color); background: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .icon-picker-btn svg { width: 19px; height: 19px; }
+  .icon-picker-btn.selected { background: var(--icon-color); color: #08090c; }
+
   .field-block {
-    background: linear-gradient(160deg, rgba(99,102,241,0.16), rgba(168,85,247,0.06)), var(--surface);
-    border: 1px solid rgba(99,102,241,0.3); border-radius: 14px; padding: 12px; margin-bottom: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 10px;
   }
   .field-block-top { display: flex; flex-direction: column; gap: 6px; }
   .fLabelInput {
-    width: 100%; padding: 7px 10px; border-radius: 8px; border: 1px solid rgba(99,102,241,0.25);
-    background: rgba(99,102,241,0.14); color: var(--text-dim); font-size: 12px; font-weight: 700; outline: none;
+    width: 100%; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-dim); font-size: 12px; font-weight: 700; outline: none;
   }
   .fLabelInput:focus { border-color: var(--accent-1); color: var(--text); }
   .fValueInput {
@@ -829,7 +842,7 @@ function escapeHtml(s) {
 
 /* ========================= アイコン(SVG) ========================= */
 const ICONS = {
-  lock: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.6" fill="#fff" stroke="none"/></svg>`,
+  lock: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.6" fill="currentColor" stroke="none"/></svg>`,
   copy: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
   eyeOpen: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3.2"/></svg>`,
   eyeClosed: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.6 10.6 0 0 1 12 5c7 0 10.5 7 10.5 7a15.6 15.6 0 0 1-3.4 4.3M6.6 6.6C3.4 8.6 1.5 12 1.5 12S5 19 12 19a10.6 10.6 0 0 0 4.4-.94"/><path d="M9.6 9.6a3.2 3.2 0 0 0 4.5 4.5"/></svg>`,
@@ -844,6 +857,32 @@ const ICONS = {
   upload: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V9"/><path d="M8 12.5 12 8.5 16 12.5"/><path d="M5 4.5h14"/></svg>`,
   trash: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4.8a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V7"/><path d="M6.5 7 7.3 19.3a1.5 1.5 0 0 0 1.5 1.4h6.4a1.5 1.5 0 0 0 1.5-1.4L17.5 7"/><path d="M10 11v6M14 11v6"/></svg>`,
   document: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.8h6.2l3.8 3.8V19.5a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4.8a1 1 0 0 1 1-1Z"/><path d="M13.2 3.8v3.8h3.8"/><path d="M9 12.2h6M9 15.6h6"/></svg>`,
+  dollar: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5v15"/><path d="M15.6 8c-.7-1.1-2-1.6-3.6-1.6-2.2 0-3.8 1.2-3.8 2.9 0 3.5 7.4 1.7 7.4 5.3 0 1.7-1.7 2.9-3.9 2.9-1.6 0-3.1-.6-3.8-1.7"/></svg>`,
+  card: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.8" y="5.8" width="18.4" height="12.4" rx="2.2"/><path d="M2.8 9.6h18.4"/><path d="M6 14.4h4.2"/></svg>`,
+  bag: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10l.9 11.3a1.6 1.6 0 0 1-1.6 1.7H7.7a1.6 1.6 0 0 1-1.6-1.7Z"/><path d="M9 8V6.3a3 3 0 0 1 6 0V8"/></svg>`,
+  tie: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3h3.4l1 3.3-1.6 3.3 2.5 9.4-3.6 3-3.6-3 2.5-9.4-1.6-3.3Z"/></svg>`,
+  play: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5l11.5 6.5L8 18.5Z"/></svg>`,
+  chat: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1Z"/></svg>`,
+};
+
+/* フォルダのマークごとの色。用途がひと目で分かるように、マークと色の組み合わせは固定にしている */
+const FOLDER_ICON_COLORS = {
+  folder: "#c7cbd1",
+  dollar: "#e8b04b",
+  card: "#6fcf97",
+  bag: "#a78bfa",
+  tie: "#f2836b",
+  play: "#e5484d",
+  chat: "#64d2ff",
+};
+const FOLDER_ICON_NAMES = {
+  folder: "フォルダ（汎用）",
+  dollar: "ドル（銀行・金融）",
+  card: "カード（サブスク）",
+  bag: "バッグ（買い物）",
+  tie: "ネクタイ（仕事）",
+  play: "再生ボタン（動画・音楽）",
+  chat: "吹き出し（SNS）",
 };
 
 /* ========================= 自動ロック ========================= */
@@ -1079,32 +1118,31 @@ function renderFolderGroups() {
   }));
   const validFolderIds = new Set(state.vault.folders.map((f) => f.id));
   const unassigned = state.vault.sites.filter((s) => !s.folderId || !validFolderIds.has(s.folderId));
-  if (unassigned.length) {
-    groups.push({ folder: { id: "__unassigned__", name: "未分類" }, sites: unassigned });
-  }
-  return groups.map(renderFolderCard).join("");
+  const foldersHtml = groups.map(renderFolderCard).join("");
+  const unassignedHtml = unassigned.map(renderSiteCard).join(""); // フォルダに入れていないアカウントは、そのまま一覧に出す(未分類フォルダは作らない)
+  return foldersHtml + unassignedHtml;
 }
 
 function renderFolderCard({ folder, sites }) {
   const isOpen = state.openFolderIds.has(folder.id);
+  const iconKey = folder.icon && ICONS[folder.icon] ? folder.icon : "folder";
+  const iconColor = FOLDER_ICON_COLORS[iconKey];
   const innerHtml = sites.length
     ? sites.map(renderSiteCard).join("")
     : `<div class="empty-state" style="padding:16px 0;">このフォルダは空です</div>`;
   const folderCardHtml = `
     <div class="folder-card ${isOpen ? "open" : ""}" data-folder="${folder.id}">
       <div class="folder-head" data-toggle-folder="${folder.id}">
-        <div class="folder-icon">${ICONS.folder}</div>
+        <div class="folder-icon" style="--icon-color:${iconColor}">${ICONS[iconKey]}</div>
         <div class="folder-name-wrap">
           <div class="folder-name">${escapeHtml(folder.name)}</div>
           <div class="site-sub">${sites.length}件</div>
         </div>
-        ${folder.id === "__unassigned__" ? "" : `<button class="icon-edit-btn" data-rename-folder="${folder.id}" aria-label="フォルダ名を変更">${ICONS.pencil}</button>`}
+        <button class="icon-edit-btn" data-rename-folder="${folder.id}" aria-label="フォルダ名を変更">${ICONS.pencil}</button>
         <div class="chevron">▶</div>
       </div>
       <div class="folder-body">${innerHtml}</div>
     </div>`;
-
-  if (folder.id === "__unassigned__") return folderCardHtml; // 未分類は仮想フォルダなので変更・削除の対象外
 
   return `
   <div class="swipe-row" data-swipe-row>
@@ -1576,7 +1614,27 @@ async function saveSiteFromSheet() {
 }
 
 /* ========================= フォルダ作成シート ========================= */
+const FOLDER_ICON_KEYS = ["folder", "dollar", "card", "bag", "tie", "play", "chat"];
+function renderIconPickerHtml(selected) {
+  return `<div class="sfield">
+    <label>マーク</label>
+    <div class="icon-picker">
+      ${FOLDER_ICON_KEYS.map((k) => `<button type="button" class="icon-picker-btn ${k === selected ? "selected" : ""}" data-icon-choice="${k}" style="--icon-color:${FOLDER_ICON_COLORS[k]}" aria-label="${FOLDER_ICON_NAMES[k]}">${ICONS[k]}</button>`).join("")}
+    </div>
+  </div>`;
+}
+function bindIconPicker(container, onChange) {
+  container.querySelectorAll("[data-icon-choice]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      container.querySelectorAll("[data-icon-choice]").forEach((b) => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      onChange(btn.getAttribute("data-icon-choice"));
+    });
+  });
+}
+
 function openCreateFolderSheet() {
+  let selectedIcon = "folder";
   const overlay = getOverlay();
   overlay.innerHTML = `
     <div class="sheet">
@@ -1586,6 +1644,7 @@ function openCreateFolderSheet() {
         <label>フォルダ名</label>
         <input type="text" id="folderNameInput" placeholder="例）銀行" />
       </div>
+      ${renderIconPickerHtml(selectedIcon)}
       <div class="error-msg" id="folderNameError"></div>
       <div class="btn-row">
         <button class="btn secondary" id="cancelFolderBtn">キャンセル</button>
@@ -1593,6 +1652,7 @@ function openCreateFolderSheet() {
       </div>
     </div>`;
   showOverlay();
+  bindIconPicker(overlay, (icon) => { selectedIcon = icon; });
 
   document.getElementById("cancelFolderBtn").addEventListener("click", closeOverlay);
   document.getElementById("createFolderBtn").addEventListener("click", async () => {
@@ -1603,7 +1663,7 @@ function openCreateFolderSheet() {
       errEl.textContent = "同じ名前のフォルダが既にあります";
       return;
     }
-    const folder = { id: uid(), name };
+    const folder = { id: uid(), name, icon: selectedIcon };
     state.vault.folders.push(folder);
     try {
       await persistVault();
@@ -1621,6 +1681,7 @@ function openCreateFolderSheet() {
 function openRenameFolderSheet(folderId) {
   const folder = state.vault.folders.find((f) => f.id === folderId);
   if (!folder) return;
+  let selectedIcon = folder.icon && ICONS[folder.icon] ? folder.icon : "folder";
   const overlay = getOverlay();
   overlay.innerHTML = `
     <div class="sheet">
@@ -1630,6 +1691,7 @@ function openRenameFolderSheet(folderId) {
         <label>フォルダ名</label>
         <input type="text" id="folderNameInput" value="${escapeHtml(folder.name)}" placeholder="例）銀行" />
       </div>
+      ${renderIconPickerHtml(selectedIcon)}
       <div class="error-msg" id="folderNameError"></div>
       <div class="btn-row">
         <button class="btn secondary" id="cancelFolderBtn">キャンセル</button>
@@ -1637,6 +1699,7 @@ function openRenameFolderSheet(folderId) {
       </div>
     </div>`;
   showOverlay();
+  bindIconPicker(overlay, (icon) => { selectedIcon = icon; });
 
   document.getElementById("cancelFolderBtn").addEventListener("click", closeOverlay);
   document.getElementById("renameFolderBtn").addEventListener("click", async () => {
@@ -1648,11 +1711,14 @@ function openRenameFolderSheet(folderId) {
       return;
     }
     const previousName = folder.name;
+    const previousIcon = folder.icon;
     folder.name = name;
+    folder.icon = selectedIcon;
     try {
       await persistVault();
     } catch (e) {
       folder.name = previousName;
+      folder.icon = previousIcon;
       return;
     }
     closeOverlay();
