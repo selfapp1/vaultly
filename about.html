@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vaultly について</title>
+<meta name="description" content="Vaultlyは、IDやパスワードを端末内で暗号化して安全に保管する、個人向けのパスワード管理アプリです。" />
+<style>
+  :root {
+    --bg: #000000;
+    --surface: #1c1c1e;
+    --border: #262629;
+    --text: #ffffff;
+    --text-dim: #8e8e93;
+    --danger: #ff453a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 20px 60px; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    line-height: 1.8; max-width: 640px; margin-left: auto; margin-right: auto;
+  }
+  .logo {
+    width: 56px; height: 56px; border-radius: 16px; background: #ffffff;
+    display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
+  }
+  .logo svg { width: 26px; height: 26px; }
+  h1 { font-size: 26px; font-weight: 800; margin: 0 0 6px; }
+  .tagline { color: var(--text-dim); font-size: 15px; margin-bottom: 28px; }
+  h2 { font-size: 16px; font-weight: 700; margin: 32px 0 8px; }
+  p, li { font-size: 14.5px; color: var(--text); }
+  ul { padding-left: 20px; }
+  .box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px 18px; margin: 16px 0;
+  }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; }
+  .btn {
+    display: inline-block; padding: 13px 22px; border-radius: 12px; font-weight: 700;
+    font-size: 14.5px; text-decoration: none;
+  }
+  .btn-primary { background: #ffffff; color: #08090c; }
+  .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  footer { margin-top: 48px; color: var(--text-dim); font-size: 12.5px; }
+  footer a { color: var(--text-dim); }
+</style>
+</head>
+<body>
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#08090c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="10" width="16" height="10" rx="2"/>
+      <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+    </svg>
+  </div>
+  <h1>Vaultly</h1>
+  <p class="tagline">シンプルで安全な、個人用パスワード管理アプリ</p>
+
+  <p>Vaultlyは、IDやパスワード、会員番号などの情報を、お使いの端末上で暗号化して保管するための個人向けアプリです。アカウントをフォルダごとに整理して、必要なときにすぐ取り出せます。</p>
+
+  <h2>安全性について</h2>
+  <div class="box">
+    <p>登録した情報は、すべて端末内で暗号化された状態で保存されます。開発者を含む第三者が内容を閲覧することはできません。詳しくは<a href="privacy.html">プライバシーポリシー</a>をご覧ください。</p>
+  </div>
+
+  <h2>主な機能</h2>
+  <ul>
+    <li>ID・パスワード・メモなどをフォルダ分けして管理</li>
+    <li>端末内での暗号化保存(外部サーバーへの送信なし)</li>
+    <li>任意でGoogleドライブへの暗号化バックアップ</li>
+    <li>iPhoneのホーム画面にアプリとして追加可能</li>
+  </ul>
+
+  <div class="actions">
+    <a class="btn btn-primary" href="index.html">アプリを開く</a>
+    <a class="btn btn-secondary" href="privacy.html">プライバシーポリシー</a>
+  </div>
+
+  <footer>
+    お問い合わせ: <a href="mailto:vaultly.contact@gmail.com">vaultly.contact@gmail.com</a>
+  </footer>
+</body>
+</html>
