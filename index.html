@@ -511,6 +511,7 @@ async function consumeGdriveRedirectToken() {
         grant_type: "authorization_code",
         code,
         code_verifier: verifier,
+        redirect_uri: GDRIVE_REDIRECT_URI,
       }),
     });
     if (!res.ok) return false;
