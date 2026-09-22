@@ -392,12 +392,16 @@ function saveStore(store) {
 
 /* ========================= Googleドライブ連携 ========================= */
 const GDRIVE_CLIENT_ID = "151024751905-f74rcgi65ao8149pqrujusjeb7lq5ohv.apps.googleusercontent.com";
+/* トークン交換にはGoogleのクライアントシークレットが要るが、静的サイトのコードには埋め込めないため、
+   シークレットを保管した中継サーバー(Cloudflare Workers)経由でGoogleと通信する。 */
+const GDRIVE_TOKEN_PROXY_URL = "https://vaultly-oauth-proxy.vaultly-contact.workers.dev";
 const GDRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 const GDRIVE_FOLDER_KEY = "pv_gdrive_folder_id";
 const GDRIVE_TOKEN_CACHE_KEY = "pv_gdrive_token_cache";
+const GDRIVE_REFRESH_TOKEN_KEY = "pv_gdrive_refresh_token";
 let gdriveAccessToken = loadCachedGdriveToken();
 
-/* Googleへの許可情報をタブが閉じるまで保持する(リロードのたびに聞き直さないため) */
+/* アクセストークン(約1時間で失効する)をタブが閉じるまで保持する */
 function loadCachedGdriveToken() {
   try {
     const raw = sessionStorage.getItem(GDRIVE_TOKEN_CACHE_KEY);
@@ -421,45 +425,132 @@ function clearCachedGdriveToken() {
   sessionStorage.removeItem(GDRIVE_TOKEN_CACHE_KEY);
 }
 
+/* リフレッシュトークン(失効しない限りずっと使える)は端末に保存しておく。
+   これがあれば、アクセストークンが切れても、画面を切り替えずに裏側だけで更新できる。 */
+function loadCachedGdriveRefreshToken() {
+  try {
+    return localStorage.getItem(GDRIVE_REFRESH_TOKEN_KEY) || null;
+  } catch (e) {
+    return null;
+  }
+}
+function cacheGdriveRefreshToken(token) {
+  try {
+    localStorage.setItem(GDRIVE_REFRESH_TOKEN_KEY, token);
+  } catch (e) {}
+}
+function clearCachedGdriveRefreshToken() {
+  localStorage.removeItem(GDRIVE_REFRESH_TOKEN_KEY);
+}
+
 /* ========================= Google連携(画面ごと切り替わるリダイレクト方式) =========================
    ポップアップ方式は、ホーム画面に追加した状態(ウェブアプリ化)ではブロックされて
    何も起きないまま固まることがあるため、ポップアップを一切使わず、画面ごとGoogleの
-   サインインページに切り替わり、終わったらこのアプリに戻ってくる方式にしている。 */
+   サインインページに切り替わり、終わったらこのアプリに戻ってくる方式にしている。
+
+   さらに認可コード方式(PKCE)+リフレッシュトークンを使い、最初の1回だけ画面が
+   切り替わって連携すれば、以降はアクセストークンが切れても裏側で自動更新され、
+   毎回ユーザーに再連携を求めずに済むようにしている。 */
 const GDRIVE_REDIRECT_URI = location.origin + location.pathname;
 const GDRIVE_RESUME_SYNC_KEY = "pv_gdrive_resume_sync";
+const GDRIVE_PKCE_VERIFIER_KEY = "pv_gdrive_pkce_verifier";
 
-function buildGdriveAuthUrl() {
+function base64UrlEncode(bytes) {
+  let str = "";
+  for (const b of bytes) str += String.fromCharCode(b);
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function randomPkceVerifier() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return base64UrlEncode(bytes);
+}
+async function pkceChallengeFromVerifier(verifier) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+  return base64UrlEncode(new Uint8Array(digest));
+}
+
+async function buildGdriveAuthUrl() {
+  const verifier = randomPkceVerifier();
+  sessionStorage.setItem(GDRIVE_PKCE_VERIFIER_KEY, verifier);
+  const challenge = await pkceChallengeFromVerifier(verifier);
   const params = new URLSearchParams({
     client_id: GDRIVE_CLIENT_ID,
     redirect_uri: GDRIVE_REDIRECT_URI,
-    response_type: "token",
+    response_type: "code",
     scope: GDRIVE_SCOPE,
     include_granted_scopes: "true",
+    access_type: "offline",
     prompt: "consent",
+    code_challenge: challenge,
+    code_challenge_method: "S256",
   });
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 
 /* Googleとの連携が必要な操作を行った本人の操作(ボタン・確認ダイアログのOK)からだけ呼ぶこと。
    画面ごとGoogleへ切り替わるため、呼んだ時点でこの関数から戻ってくることはない。 */
-function redirectToGoogleSignIn() {
+async function redirectToGoogleSignIn() {
   localStorage.setItem(GDRIVE_RESUME_SYNC_KEY, "1");
-  window.location.href = buildGdriveAuthUrl();
+  window.location.href = await buildGdriveAuthUrl();
 }
 
 /* アプリの起動時に1回だけ呼ぶ。Googleから戻ってきた直後であれば、
-   URLの#以降にアクセストークンが入っているので取り出してから、URLをきれいに戻す */
-function consumeGdriveRedirectToken() {
-  const hash = window.location.hash;
-  if (!hash || hash.length < 2 || !hash.includes("access_token=")) return false;
-  const params = new URLSearchParams(hash.slice(1));
-  const token = params.get("access_token");
-  const expiresIn = params.get("expires_in");
-  history.replaceState(null, "", window.location.pathname + window.location.search);
-  if (!token) return false;
-  gdriveAccessToken = token;
-  cacheGdriveToken(token, Number(expiresIn) || 3500);
-  return true;
+   URLに認可コードが入っているので、アクセストークン・リフレッシュトークンに交換してからURLをきれいに戻す */
+async function consumeGdriveRedirectToken() {
+  const code = new URLSearchParams(window.location.search).get("code");
+  if (!code) return false;
+  const verifier = sessionStorage.getItem(GDRIVE_PKCE_VERIFIER_KEY) || "";
+  sessionStorage.removeItem(GDRIVE_PKCE_VERIFIER_KEY);
+  history.replaceState(null, "", window.location.pathname);
+  try {
+    const res = await fetch(GDRIVE_TOKEN_PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        grant_type: "authorization_code",
+        code,
+        code_verifier: verifier,
+      }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    gdriveAccessToken = data.access_token;
+    cacheGdriveToken(data.access_token, data.expires_in);
+    if (data.refresh_token) cacheGdriveRefreshToken(data.refresh_token);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/* アクセストークンが無い(または切れた)時に呼ぶ。リフレッシュトークンがあれば、
+   画面を一切切り替えずに裏側だけでアクセストークンを更新する。
+   リフレッシュトークン自体が無効な場合(本人が連携を解除した等)だけ false を返す。 */
+async function ensureGdriveAccessToken() {
+  if (gdriveAccessToken) return true;
+  const refreshToken = loadCachedGdriveRefreshToken();
+  if (!refreshToken) return false;
+  try {
+    const res = await fetch(GDRIVE_TOKEN_PROXY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+      }),
+    });
+    if (!res.ok) {
+      if (res.status === 400 || res.status === 401) clearCachedGdriveRefreshToken();
+      return false;
+    }
+    const data = await res.json();
+    gdriveAccessToken = data.access_token;
+    cacheGdriveToken(data.access_token, data.expires_in);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 /* Googleとの連携が切れている時に呼ぶ。OKされたらそのままGoogleのサインイン画面へ切り替わる */
@@ -470,7 +561,7 @@ function offerGdriveReconnect() {
 }
 
 async function gdriveFetch(url, options = {}) {
-  if (!gdriveAccessToken) {
+  if (!(await ensureGdriveAccessToken())) {
     const err = new Error("gdrive-auth-required");
     err.code = "gdrive-auth-required";
     throw err;
@@ -482,6 +573,13 @@ async function gdriveFetch(url, options = {}) {
   if (res.status === 401) {
     gdriveAccessToken = null;
     clearCachedGdriveToken();
+    if (await ensureGdriveAccessToken()) {
+      const retryRes = await fetch(url, {
+        ...options,
+        headers: { ...(options.headers || {}), Authorization: `Bearer ${gdriveAccessToken}` },
+      });
+      if (retryRes.status !== 401) return retryRes;
+    }
     const err = new Error("gdrive-auth-required");
     err.code = "gdrive-auth-required";
     throw err;
@@ -529,7 +627,7 @@ async function pickGdriveFolder() {
   const mode = await chooseGdriveFolderMode();
   if (mode === "root") return "root";
 
-  if (!gdriveAccessToken) {
+  if (!(await ensureGdriveAccessToken())) {
     const err = new Error("gdrive-auth-required");
     err.code = "gdrive-auth-required";
     throw err;
@@ -675,7 +773,7 @@ async function gdriveBackupHasData() {
 }
 
 async function saveToGoogleDrive() {
-  if (!gdriveAccessToken) { offerGdriveReconnect(); return; }
+  if (!(await ensureGdriveAccessToken())) { offerGdriveReconnect(); return; }
   try {
     showToast("Googleにサインインしています…");
     await uploadBackupToDrive();
@@ -720,7 +818,7 @@ async function downloadBackupFromDrive() {
 }
 
 async function restoreFromGoogleDrive() {
-  if (!gdriveAccessToken) { offerGdriveReconnect(); return; }
+  if (!(await ensureGdriveAccessToken())) { offerGdriveReconnect(); return; }
   try {
     showToast("Googleドライブから確認しています…");
     const { backupStore } = await downloadBackupFromDrive();
@@ -792,7 +890,7 @@ async function autoPullAndRefresh() {
 /* アカウントの追加・編集・削除のたびに自動で呼ばれる(接続済みの場合のみ) */
 async function autoSyncToGoogleDrive() {
   if (localStorage.getItem(GDRIVE_AUTOSYNC_KEY) !== "1") return;
-  if (!gdriveAccessToken) { offerGdriveReconnect(); return; }
+  if (!(await ensureGdriveAccessToken())) { offerGdriveReconnect(); return; }
   try {
     await uploadBackupToDrive();
   } catch (e) {
@@ -1937,7 +2035,7 @@ async function savePlainTextToGoogleDrive() {
     "続けますか？"
   );
   if (!ok) return;
-  if (!gdriveAccessToken) { offerGdriveReconnect(); return; }
+  if (!(await ensureGdriveAccessToken())) { offerGdriveReconnect(); return; }
 
   try {
     showToast("Googleにサインインしています…");
@@ -2078,7 +2176,7 @@ function render() {
 }
 
 (async () => {
-  const returnedFromGoogle = consumeGdriveRedirectToken();
+  const returnedFromGoogle = await consumeGdriveRedirectToken();
   const unlocked = await tryAutoUnlock();
   if (unlocked) {
     resetIdleTimer();
