@@ -39,7 +39,7 @@
     -webkit-text-size-adjust: 100%;
     overscroll-behavior-y: contain;
   }
-  #app { min-height: 100%; padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
+  #app { min-height: 100vh; padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); display: flex; flex-direction: column; }
   input, textarea, button { font-family: inherit; }
   ::selection { background: var(--accent-1); color: var(--accent-ink); }
 
@@ -72,15 +72,12 @@
 
   .btn {
     appearance: none; cursor: pointer;
-    padding: 14px 20px; border-radius: 4px; font-size: 14px; font-weight: 700; letter-spacing: 0.02em;
+    padding: 13px; border-radius: 0; font-size: 13px; font-weight: 400; letter-spacing: 0.02em;
     width: 100%; max-width: 340px; color: var(--accent-1);
     background: var(--surface); border: 1px solid var(--accent-1);
-    box-shadow: 0 0 4px var(--accent-1), 0 0 9px var(--accent-1);
-    transition: transform .12s ease, filter .12s ease;
   }
-  .btn:active { transform: scale(0.96); filter: brightness(1.3); }
   .btn.secondary {
-    background: var(--surface); color: var(--text-dim); border: 1px solid var(--text-dim); box-shadow: 0 0 4px var(--text-dim), 0 0 9px var(--text-dim);
+    background: var(--surface); color: rgba(231,247,236,0.4); border: 1px solid rgba(231,247,236,0.4);
   }
   .btn.ghost { background: transparent; box-shadow: none; border: none; color: var(--accent-1); font-weight: 600; padding: 10px; }
   .btn.danger { background: var(--surface); color: var(--danger); border: 1px solid var(--danger); box-shadow: 0 0 4px var(--danger), 0 0 9px var(--danger); }
@@ -89,12 +86,50 @@
 
   .error-msg { color: var(--danger); font-size: 13px; min-height: 18px; margin: -4px 0 10px; text-shadow: 0 0 4px currentColor, 0 0 9px currentColor; }
   .warn-box {
-    max-width: 340px; text-align: left; background: var(--surface);
-    border: 1px solid var(--danger); border-radius: 4px; padding: 12px 14px;
-    font-size: 12.5px; color: var(--danger); line-height: 1.6; margin-bottom: 20px;
+    position: relative; max-width: 340px; text-align: left; background: var(--surface);
+    border: 1px solid rgba(255,90,90,0.4); border-radius: 0; padding: 16px;
+    font-size: 11.5px; color: var(--danger); line-height: 1.8; margin-bottom: 22px;
     text-shadow: 0 0 4px currentColor, 0 0 9px currentColor;
+    display: flex; gap: 11px; align-items: flex-start;
     --cv-c: var(--danger);
   }
+  .warn-box.dim { color: rgba(231,247,236,0.7); text-shadow: none; --cv-c: var(--accent-2); border-color: rgba(0,143,17,0.4); }
+  .warn-box svg { flex-shrink: 0; width: 20px; height: 20px; margin-top: 1px; }
+
+  /* full-screen sub-sheet header, traced from the mockup's back-arrow pattern */
+  .sheet-head2 {
+    display: flex; align-items: center; gap: 14px;
+    margin: -18px -18px 18px; padding: 4px 18px 14px;
+    border-bottom: 1px solid rgba(0,143,17,0.25);
+  }
+  .sheet-head2 .back-btn {
+    background: none; border: none; padding: 0; display: flex; cursor: pointer; color: var(--accent-2); flex-shrink: 0;
+  }
+  .sheet-head2 .back-btn svg { width: 18px; height: 18px; }
+  .sheet-head2 h3 {
+    font-size: 19px; font-weight: 400; letter-spacing: 0.03em; color: var(--text); margin: 0; flex: 1;
+  }
+  .settings-group-label {
+    font-size: 9px; color: rgba(0,143,17,0.7); letter-spacing: 0.1em; text-transform: uppercase;
+    margin: 20px 0 6px;
+  }
+  .settings-group-label:first-child { margin-top: 0; }
+  .settings-group {
+    position: relative; background: var(--surface); border: 1px solid rgba(0,143,17,0.3); padding: 0 12px;
+    --cv-c: rgba(0,143,17,0.3);
+  }
+  .settings-group.danger { border-color: rgba(255,90,90,0.35); box-shadow: 0 0 4px rgba(255,90,90,0.35), 0 0 9px rgba(255,90,90,0.35); --cv-c: var(--danger); margin-top: 20px; }
+  .settings-row {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: none; border: none;
+    padding: 13px 4px; color: var(--text); font-size: 12px; cursor: pointer;
+  }
+  .settings-row + .settings-row { border-top: 1px solid rgba(231,247,236,0.08); }
+  .settings-row .si-icon { display: flex; flex-shrink: 0; color: var(--accent-2); }
+  .settings-row .si-icon svg { width: 15px; height: 15px; }
+  .settings-row .si-chev svg { width: 12px; height: 12px; }
+  .settings-row .si-chev { display: flex; flex-shrink: 0; color: var(--accent-2); }
+  .settings-row.danger, .settings-row.danger .si-icon, .settings-row.danger .si-chev { color: var(--danger); }
+  .settings-note { font-size: 10px; color: rgba(231,247,236,0.35); line-height: 1.8; margin: 18px 0 0; }
 
   /* ---- Main screen ---- */
   .rain-wrap { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--bg); }
@@ -111,62 +146,74 @@
   @keyframes rainFall { from { transform: translateY(0); } to { transform: translateY(180%); } }
   header.top {
     position: sticky; top: 0; z-index: 5;
-    padding: 14px 16px 12px;
+    padding: 22px 24px 0;
     background: linear-gradient(180deg, var(--bg) 78%, transparent);
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; justify-content: space-between;
   }
   header.top h2 {
-    font-size: 17px; margin: 0; flex: 1; font-weight: 800; letter-spacing: 0.08em;
-    color: var(--accent-1); text-shadow: 0 0 4px currentColor, 0 0 9px currentColor;
+    font-size: 30px; margin: 0; font-weight: 400; letter-spacing: 0.04em; line-height: 1;
+    color: var(--text);
   }
+  .header-icons { display: flex; align-items: center; gap: 14px; }
   .icon-btn {
-    width: 40px; height: 40px; border-radius: 4px; border: 1px solid var(--border);
-    background: var(--surface); color: var(--text-dim); display: flex; align-items: center; justify-content: center;
-    font-size: 16px; cursor: pointer; transition: transform .12s ease, filter .12s ease;
+    background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--accent-2); cursor: pointer; transition: transform .12s ease, filter .12s ease;
   }
-  .icon-btn:active { transform: scale(0.92); filter: brightness(1.4); }
-  .icon-btn svg { width: 19px; height: 19px; }
-  main.content { padding: 4px 16px 100px; position: relative; z-index: 1; }
+  .icon-btn:active { transform: scale(0.9); filter: brightness(1.4); }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .header-subtitle {
+    padding: 6px 24px 0; position: relative; z-index: 1;
+    font-size: 10px; color: rgba(0,143,17,0.75); letter-spacing: 0.08em;
+  }
+  main.content { padding: 20px 20px 16px; position: relative; z-index: 1; flex: 1; }
   .empty-state { text-align: center; color: var(--text-dim); padding: 60px 20px; font-size: 14px; line-height: 1.8; }
 
   .site-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
-    box-shadow: 0 0 4px var(--cv-c, var(--border)), 0 0 9px var(--cv-c, var(--border));
-    margin-bottom: 12px; overflow: hidden;
+    position: relative; background: var(--surface); border: 1px solid var(--cv-c, rgba(0,143,17,0.5));
+    box-shadow: 0 0 4px var(--cv-c, rgba(0,143,17,0.5)), 0 0 9px var(--cv-c, rgba(0,143,17,0.5));
+    margin-bottom: 11px; overflow: hidden; opacity: var(--card-dim, 1); transform: scale(var(--card-scale, 1));
+    transition: opacity .4s ease, transform .4s ease, border-color .4s ease;
   }
-  .site-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px; cursor: pointer; }
+  .site-head { display: flex; align-items: center; gap: 13px; padding: 15px 17px; cursor: pointer; }
+  .badge-ring {
+    position: relative; width: 30px; height: 30px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; color: var(--cv-c, var(--accent-2));
+  }
+  .badge-ring::before {
+    content: ""; position: absolute; inset: 0; border: 1.3px solid currentColor; border-radius: 50%;
+  }
+  .badge-ring svg { width: 13px; height: 13px; }
+  .folder-head .badge-ring { width: 36px; height: 36px; }
+  .folder-head .badge-ring svg { width: 17px; height: 17px; }
   .site-name-wrap { flex: 1; min-width: 0; }
-  .site-name { font-weight: 700; font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .site-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
-  .chevron { color: var(--text-dim); transition: transform .2s; font-size: 13px; }
-  .site-card.open .chevron { transform: rotate(90deg); }
+  .site-name { font-weight: 400; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .site-sub { font-size: 9px; color: rgba(231,247,236,0.4); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chevron-icon { color: var(--cv-c, var(--accent-2)); transition: transform .4s cubic-bezier(.16,1,.3,1); flex-shrink: 0; }
+  .chevron-icon svg { width: 13px; height: 13px; display: block; }
+  .site-card.open .chevron-icon { transform: rotate(180deg); }
 
-  .site-body { display: none; padding: 0 14px 14px; }
+  .site-body { display: none; padding: 0 17px 15px; }
   .site-card.open .site-body { display: block; }
-  .site-card.open { --cv-c: var(--accent-1); border-color: var(--accent-1); }
+  .site-card.open { --cv-c: #00FF41; }
 
   .folder-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 4px;
-    box-shadow: 0 0 4px var(--cv-c, var(--border)), 0 0 9px var(--cv-c, var(--border));
-    margin-bottom: 12px; overflow: hidden;
+    position: relative; background: var(--surface); border: 1px solid var(--cv-c, rgba(0,143,17,0.5));
+    box-shadow: 0 0 4px var(--cv-c, rgba(0,143,17,0.5)), 0 0 9px var(--cv-c, rgba(0,143,17,0.5));
+    margin-bottom: 11px; overflow: hidden; opacity: var(--card-dim, 1); transform: scale(var(--card-scale, 1));
+    transition: opacity .4s ease, transform .4s ease, border-color .4s ease;
   }
-  .folder-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px; cursor: pointer; }
-  .folder-icon {
-    width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
-    border: 1.6px solid var(--icon-color, var(--text-dim)); color: var(--icon-color, var(--text-dim));
-    display: flex; align-items: center; justify-content: center;
-  }
+  .folder-head { display: flex; align-items: center; gap: 13px; padding: 15px 17px; cursor: pointer; }
   .folder-name-wrap { flex: 1; min-width: 0; }
-  .folder-name { font-weight: 700; font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .folder-card .chevron { color: var(--text-dim); transition: transform .2s; font-size: 13px; }
-  .folder-card.open .chevron { transform: rotate(90deg); }
-  .folder-body { display: none; padding: 0 14px 14px; }
+  .folder-name { font-weight: 400; font-size: 23px; color: var(--text); letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .folder-card .chevron-icon svg { width: 14px; height: 14px; }
+  .folder-card.open .chevron-icon { transform: rotate(180deg); }
+  .folder-body { display: none; padding: 0 17px 15px 17px; padding-top: 2px; }
   .folder-card.open .folder-body { display: block; }
-  .folder-card.open { --cv-c: var(--accent-1); border-color: var(--accent-1); }
+  .folder-card.open { --cv-c: #00FF41; }
   .folder-body .swipe-row { margin-bottom: 10px; }
   .folder-body .swipe-row:last-child { margin-bottom: 0; }
 
-  .swipe-row { position: relative; overflow: hidden; border-radius: 4px; margin-bottom: 12px; background: var(--bg); }
+  .swipe-row { position: relative; overflow: visible; border-radius: 4px; margin-bottom: 12px; background: var(--bg); }
   .swipe-row .swipe-fg { position: relative; z-index: 1; background: var(--bg); border-radius: 4px; }
   .swipe-row .swipe-fg .site-card, .swipe-row .swipe-fg .folder-card { margin-bottom: 0; }
   .swipe-actions { position: absolute; top: 0; right: 0; bottom: 0; display: flex; z-index: 0; }
@@ -202,14 +249,13 @@
 
   .fab {
     position: relative; z-index: 1;
-    width: 100%; margin-top: 6px; padding: 14px 20px; border-radius: 4px;
-    background: var(--surface); border: 1px solid var(--accent-1);
-    color: var(--accent-1); font-size: 13px; font-weight: 700; letter-spacing: 0.06em;
-    box-shadow: 0 0 4px var(--accent-1), 0 0 9px var(--accent-1);
+    margin: 0 20px calc(20px + var(--safe-bottom)); padding: 13px; border-radius: 0;
+    background: var(--surface); border: 1px solid rgba(0,143,17,0.6);
+    color: var(--accent-2); font-size: 14px; font-weight: 400; letter-spacing: 0.02em;
     display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;
     transition: transform .12s ease, filter .12s ease;
   }
-  .fab:active { transform: scale(0.96); filter: brightness(1.3); }
+  .fab:active { transform: scale(0.98); filter: brightness(1.3); }
 
   /* ---- Modal / sheet ---- */
   .overlay {
@@ -229,28 +275,30 @@
   .sheet-handle { width: 40px; height: 5px; background: var(--border); border-radius: 3px; margin: 0 auto 14px; }
   .sheet-title { font-size: 16px; font-weight: 800; margin: 0 0 16px; letter-spacing: 0.05em; color: var(--accent-1); text-shadow: 0 0 4px currentColor, 0 0 9px currentColor; }
 
-  .sfield { margin-bottom: 12px; }
-  .sfield label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 6px; font-weight: 600; }
+  .sfield { margin-bottom: 14px; }
+  .sfield label {
+    display: block; font-size: 9px; color: rgba(0,143,17,0.7); margin-bottom: 6px;
+    font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase;
+  }
   .sfield-row { display: flex; gap: 8px; align-items: flex-end; }
   .sfield-row .sfield { flex: 1; margin-bottom: 0; }
   .sfield input, .sfield textarea, .sfield select {
-    width: 100%; padding: 12px 13px; border-radius: 4px; border: 1px solid var(--border);
-    background: var(--surface); color: var(--text); font-size: 15px; outline: none;
+    width: 100%; padding: 11px 13px; border-radius: 0; border: 1px solid rgba(0,143,17,0.4);
+    background: var(--surface); color: var(--text); font-size: 13px; outline: none;
   }
   .sfield textarea { resize: vertical; min-height: 60px; }
-  .sfield input:focus, .sfield textarea:focus, .sfield select:focus { border-color: var(--accent-1); box-shadow: 0 0 4px var(--accent-1), 0 0 9px var(--accent-1); }
+  .sfield input:focus, .sfield textarea:focus, .sfield select:focus { border-color: var(--accent-1); }
 
-  .icon-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+  .icon-picker { display: flex; gap: 9px; flex-wrap: wrap; }
   .icon-picker-btn {
-    appearance: none; width: 42px; height: 42px; border-radius: 4px; flex-shrink: 0; cursor: pointer;
-    border: 1.6px solid var(--icon-color); color: var(--icon-color); background: var(--surface);
-    box-shadow: 0 0 4px var(--icon-color), 0 0 9px var(--icon-color);
+    appearance: none; width: 44px; height: 44px; flex-shrink: 0; cursor: pointer;
+    border: 1px solid rgba(231,247,236,0.15); color: var(--icon-color); background: var(--surface);
     display: flex; align-items: center; justify-content: center;
-    transition: transform .12s ease, filter .12s ease;
+    transition: transform .12s ease;
   }
   .icon-picker-btn:active { transform: scale(0.92); }
   .icon-picker-btn svg { width: 19px; height: 19px; }
-  .icon-picker-btn.selected { background: var(--icon-color); color: var(--accent-ink); filter: brightness(1.2); }
+  .icon-picker-btn.selected { background: color-mix(in srgb, var(--icon-color) 13%, transparent); border: 2px solid var(--icon-color); }
 
   .field-block {
     background: var(--surface);
@@ -283,37 +331,17 @@
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  .settings-item {
-    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--border);
-    box-shadow: 0 0 4px var(--cv-c, var(--border)), 0 0 9px var(--cv-c, var(--border));
-    border-radius: 4px; padding: 13px 14px; margin-bottom: 10px; color: var(--text); font-size: 14px; font-weight: 600;
-    cursor: pointer; transition: transform .12s ease, filter .12s ease;
-  }
-  .settings-item:active { transform: scale(0.98); filter: brightness(1.2); }
-  .settings-item .si-icon { display: flex; flex-shrink: 0; color: var(--text-dim); }
-  .settings-item.danger { color: var(--danger); --cv-c: var(--danger); }
-  .settings-item.danger .si-icon { color: var(--danger); }
-  .settings-item.gap-top { margin-top: 20px; }
   .autosync-line {
-    display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-dim);
+    display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgba(231,247,236,0.5);
     padding: 2px 4px 16px; cursor: pointer;
   }
   .autosync-line input { width: 16px; height: 16px; accent-color: var(--accent-1); flex-shrink: 0; }
-  .settings-note { font-size: 12px; color: var(--text-dim); line-height: 1.7; margin: 6px 2px 18px; }
-  /* corner-bracket decoration ("CodeVault" motif) — pure CSS, no extra markup */
-  .folder-card, .site-card, .settings-item, .warn-box, .sheet {
-    background-image:
-      linear-gradient(to right, var(--cv-c, var(--border)) 2px, transparent 2px) top left,
-      linear-gradient(to bottom, var(--cv-c, var(--border)) 2px, transparent 2px) top left,
-      linear-gradient(to left, var(--cv-c, var(--border)) 2px, transparent 2px) top right,
-      linear-gradient(to bottom, var(--cv-c, var(--border)) 2px, transparent 2px) top right,
-      linear-gradient(to right, var(--cv-c, var(--border)) 2px, transparent 2px) bottom left,
-      linear-gradient(to top, var(--cv-c, var(--border)) 2px, transparent 2px) bottom left,
-      linear-gradient(to left, var(--cv-c, var(--border)) 2px, transparent 2px) bottom right,
-      linear-gradient(to top, var(--cv-c, var(--border)) 2px, transparent 2px) bottom right;
-    background-repeat: no-repeat;
-    background-size: 10px 10px;
-  }
+  /* corner-bracket decoration ("CodeVault" motif) — 4 explicit corner marks, traced from the approved mockup */
+  .cvc { position: absolute; width: 7px; height: 7px; pointer-events: none; border-color: var(--cv-c, var(--border)); }
+  .cvc.tl { top: 3px; left: 3px; border-top: 1.4px solid; border-left: 1.4px solid; }
+  .cvc.tr { top: 3px; right: 3px; border-top: 1.4px solid; border-right: 1.4px solid; }
+  .cvc.bl { bottom: 3px; left: 3px; border-bottom: 1.4px solid; border-left: 1.4px solid; }
+  .cvc.br { bottom: 3px; right: 3px; border-bottom: 1.4px solid; border-right: 1.4px solid; }
   #importFile, #importFile2 { display: none; }
 </style>
 </head>
@@ -596,8 +624,8 @@ async function ensureGdriveAccessToken() {
 }
 
 /* Googleとの連携が切れている時に呼ぶ。OKされたらそのままGoogleのサインイン画面へ切り替わる */
-function offerGdriveReconnect() {
-  if (confirm("Googleとの連携が解除されています。\n\n再連携しますか？")) {
+async function offerGdriveReconnect() {
+  if (await confirmSheet({ title: "GOOGLE SIGN-IN", confirmLabel: "RECONNECT", html: "Googleとの連携が解除されています。<br><br>再連携しますか？" })) {
     redirectToGoogleSignIn();
   }
 }
@@ -1011,6 +1039,11 @@ const ICONS = {
   play: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5l11.5 6.5L8 18.5Z"/></svg>`,
   chat: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1Z"/></svg>`,
   search: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.7-4.7"/></svg>`,
+  chevRight: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`,
+  chevBack: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`,
+  chevDown: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`,
+  keyGeneric: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 7c0-2-2.2-3.5-5-3.5S7 5 7 7s2 2.7 5 3.5 5 1.7 5 3.5-2.2 3.5-5 3.5-5-1.5-5-3.5"/></svg>`,
+  warnTri: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>`,
 };
 
 /* フォルダのマークごとの色。用途がひと目で分かるように、マークと色の組み合わせは固定にしている */
@@ -1315,6 +1348,44 @@ function renderRainColumns() {
   return cols.join("");
 }
 
+function cornerBrackets(color) {
+  return `<div style="position:absolute; top:3px; left:3px; width:7px; height:7px; border-top:1.4px solid ${color}; border-left:1.4px solid ${color};"></div><div style="position:absolute; top:3px; right:3px; width:7px; height:7px; border-top:1.4px solid ${color}; border-right:1.4px solid ${color};"></div><div style="position:absolute; bottom:3px; left:3px; width:7px; height:7px; border-bottom:1.4px solid ${color}; border-left:1.4px solid ${color};"></div><div style="position:absolute; bottom:3px; right:3px; width:7px; height:7px; border-bottom:1.4px solid ${color}; border-right:1.4px solid ${color};"></div>`;
+}
+
+/* コーナーブラケット装飾(4隅の小さいL字)。承認済みモックアップの実寸(7px/1.4px/3px)をそのままトレース */
+function cvCorners(color) {
+  return `<span class="cvc tl" style="border-color:${color}"></span><span class="cvc tr" style="border-color:${color}"></span><span class="cvc bl" style="border-color:${color}"></span><span class="cvc br" style="border-color:${color}"></span>`;
+}
+/* サブ画面共通ヘッダー(戻る矢印+タイトル)。モックアップの各サブ画面ヘッダーをトレース */
+function sheetHead2(title, backBtnId) {
+  return `<div class="sheet-head2"><button type="button" class="back-btn" id="${backBtnId}" aria-label="戻る">${ICONS.chevBack}</button><h3>${title}</h3></div>`;
+}
+/* 警告ボックス(赤/緑の三角アイコン+文章)。モックアップの各種確認画面をトレース */
+function warnBox(text, dim) {
+  return `<div class="warn-box${dim ? " dim" : ""}">${cvCorners(dim ? "#008F11" : "#ff6b6b")}${ICONS.warnTri}<div>${text}</div></div>`;
+}
+
+/* 確認画面(モックアップの警告ボックス+CANCEL/実行ボタン)。標準のconfirm()の代わりに使う。OK=true / キャンセル=false */
+function confirmSheet({ title, html, confirmLabel, danger }) {
+  return new Promise((resolve) => {
+    const overlay = getOverlay();
+    overlay.innerHTML = `
+      <div class="sheet">
+        ${sheetHead2(title, "csBack")}
+        ${warnBox(html)}
+        <div class="btn-row">
+          <button class="btn secondary" id="csCancel">[&nbsp;CANCEL&nbsp;]</button>
+          <button class="btn${danger ? " danger" : ""}" id="csOk">[&nbsp;${confirmLabel}&nbsp;]</button>
+        </div>
+      </div>`;
+    showOverlay();
+    const done = (v) => { closeOverlay(); resolve(v); };
+    document.getElementById("csBack").addEventListener("click", () => done(false));
+    document.getElementById("csCancel").addEventListener("click", () => done(false));
+    document.getElementById("csOk").addEventListener("click", () => done(true));
+  });
+}
+
 function renderFolderCard({ folder, sites }) {
   const isOpen = state.openFolderIds.has(folder.id);
   const iconKey = folder.icon && ICONS[folder.icon] ? folder.icon : "folder";
@@ -1322,16 +1393,19 @@ function renderFolderCard({ folder, sites }) {
   const innerHtml = sites.length
     ? sites.map(renderSiteCard).join("")
     : `<div class="empty-state" style="padding:16px 0;">このフォルダは空です</div>`;
+  const dimmed = state.openFolderIds.size > 0 && !isOpen;
+  const cv = isOpen ? "#00FF41" : "var(--accent-2)";
   const folderCardHtml = `
-    <div class="folder-card ${isOpen ? "open" : ""}" data-folder="${folder.id}">
+    <div class="folder-card ${isOpen ? "open" : ""}" data-folder="${folder.id}" style="--card-dim:${dimmed ? 0.4 : 1}; --card-scale:${dimmed ? 0.98 : 1};">
+      ${cornerBrackets(cv)}
       <div class="folder-head" data-toggle-folder="${folder.id}">
-        <div class="folder-icon" style="--icon-color:${iconColor}">${ICONS[iconKey]}</div>
+        <div class="badge-ring">${ICONS[iconKey]}</div>
         <div class="folder-name-wrap">
           <div class="folder-name">${escapeHtml(folder.name)}</div>
-          <div class="site-sub">${sites.length}件</div>
+          <div class="site-sub">${sites.length} ${sites.length === 1 ? "ACCOUNT" : "ACCOUNTS"}</div>
         </div>
         <button class="icon-edit-btn" data-rename-folder="${folder.id}" aria-label="フォルダ名を変更">${ICONS.pencil}</button>
-        <div class="chevron">▶</div>
+        <div class="chevron-icon">${ICONS.chevRight}</div>
       </div>
       <div class="folder-body">${innerHtml}</div>
     </div>`;
@@ -1350,19 +1424,25 @@ function renderMain() {
   <div class="rain-wrap" id="rainWrap">${renderRainColumns()}</div>
   <header class="top">
     <h2>VAULTLY</h2>
-    <button class="icon-btn" id="searchBtn" title="検索">${ICONS.search}</button>
-    <button class="icon-btn" id="addFolderBtn" title="新しいフォルダを作る">${ICONS.folderPlus}</button>
-    <button class="icon-btn" id="cloudSyncBtn">${ICONS.cloud}</button>
-    <button class="icon-btn" id="settingsBtn">${ICONS.gear}</button>
-    <button class="icon-btn" id="lockBtn">${ICONS.lockSmall}</button>
+    <div class="header-icons">
+      <button class="icon-btn" id="searchBtn" title="検索">${ICONS.search}</button>
+      <button class="icon-btn" id="addFolderBtn" title="新しいフォルダを作る">${ICONS.folderPlus}</button>
+      <button class="icon-btn" id="cloudSyncBtn">${ICONS.cloud}</button>
+      <button class="icon-btn" id="settingsBtn">${ICONS.gear}</button>
+      <button class="icon-btn" id="lockBtn">${ICONS.lockSmall}</button>
+    </div>
   </header>
+  <div class="header-subtitle">SECURE VAULT ACCESSED</div>
   <main class="content">${buildListHtml()}</main>
-  <button class="fab" id="addSiteBtn">＋ NEW ACCOUNT</button>
+  <button class="fab" id="addSiteBtn">[&nbsp;+&nbsp;NEW ACCOUNT&nbsp;]</button>
   `;
 }
 
 function renderSiteCard(site) {
   const isOpen = state.openSiteId === site.id;
+  const dimmed = !!state.openSiteId && !isOpen;
+  const cv = isOpen ? "#00FF41" : "var(--accent-2)";
+  const sub = site.entries[0] ? escapeHtml(site.entries[0].value) : "";
   const fieldsHtml = site.entries.map((f) => {
     const masked = isMasked(f);
     const displayVal = masked ? "••••••••" : escapeHtml(f.value);
@@ -1385,13 +1465,16 @@ function renderSiteCard(site) {
       <button class="swipe-action-btn delete" data-delete="${site.id}">削除</button>
     </div>
     <div class="swipe-fg">
-      <div class="site-card ${isOpen ? "open" : ""}" data-site="${site.id}">
+      <div class="site-card ${isOpen ? "open" : ""}" data-site="${site.id}" style="--card-dim:${dimmed ? 0.4 : 1}; --card-scale:${dimmed ? 0.98 : 1};">
+        ${cornerBrackets(cv)}
         <div class="site-head" data-toggle-site="${site.id}">
+          <div class="badge-ring">${ICONS.keyGeneric}</div>
           <div class="site-name-wrap">
             <div class="site-name">${escapeHtml(site.name)}</div>
+            ${sub ? `<div class="site-sub">${sub}</div>` : ""}
           </div>
           <button class="icon-edit-btn" data-edit="${site.id}" aria-label="編集">${ICONS.pencil}</button>
-          <div class="chevron">▶</div>
+          <div class="chevron-icon">${ICONS.chevDown}</div>
         </div>
         <div class="site-body">
           ${fieldsHtml}
@@ -1475,7 +1558,7 @@ function bindListEvents() {
       const id = el.getAttribute("data-delete");
       const site = state.vault.sites.find((s) => s.id === id);
       if (!site) return;
-      if (confirm(`「${site.name}」を削除しますか？\n\nこの操作は取り消せません。`)) {
+      if (await confirmSheet({ title: "DELETE ACCOUNT", danger: true, confirmLabel: "DELETE", html: `「${escapeHtml(site.name)}」を削除しますか？<br><br>この操作は取り消せません。` })) {
         state.vault.sites = state.vault.sites.filter((s) => s.id !== id);
         if (state.openSiteId === id) { state.openSiteId = null; setRainActive(false); }
         await persistVault();
@@ -1495,7 +1578,7 @@ function bindListEvents() {
       const id = el.getAttribute("data-delete-folder");
       const folder = state.vault.folders.find((f) => f.id === id);
       if (!folder) return;
-      if (confirm(`「${folder.name}」フォルダを削除しますか？\n\n中のアカウントは削除されず、未分類に移動します。`)) {
+      if (await confirmSheet({ title: "DELETE FOLDER", danger: true, confirmLabel: "DELETE", html: `「${escapeHtml(folder.name)}」フォルダを削除しますか？<br><br>中のアカウントは削除されず、未分類に移動します。` })) {
         state.vault.folders = state.vault.folders.filter((f) => f.id !== id);
         state.openFolderIds.delete(id);
         saveOpenFolderIds();
@@ -1691,7 +1774,7 @@ function openSiteSheet(siteId) {
 
   const folderFieldHtml = state.vault.folders.length ? `
       <div class="sfield">
-        <label>フォルダ</label>
+        <label>FOLDER</label>
         <select id="siteFolderInput">
           <option value="">未分類</option>
           ${state.vault.folders.map((f) => `<option value="${f.id}" ${f.id === folderId ? "selected" : ""}>${escapeHtml(f.name)}</option>`).join("")}
@@ -1701,22 +1784,24 @@ function openSiteSheet(siteId) {
   const overlay = getOverlay();
   overlay.innerHTML = `
     <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">${siteId ? "アカウントを編集" : "アカウントを追加"}</div>
+      <div class="sheet-head2">
+        <button type="button" class="back-btn" id="cancelSiteBtn" aria-label="閉じる">${ICONS.chevBack}</button>
+        <h3>${siteId ? "EDIT ACCOUNT" : "NEW ACCOUNT"}</h3>
+      </div>
       <div class="sfield">
-        <label>アカウント名</label>
+        <label>ACCOUNT NAME</label>
         <input type="text" id="siteNameInput" value="${escapeHtml(name)}" placeholder="例）Amazon" />
       </div>
       ${folderFieldHtml}
       <div id="fieldsContainer"></div>
-      <button class="add-field-btn" id="addFieldBtn">＋ 項目を追加</button>
+      <button class="add-field-btn" id="addFieldBtn">+ ADD FIELD</button>
       <div class="sfield">
-        <label>メモ（任意）</label>
+        <label>MEMO (OPTIONAL)</label>
         <textarea id="siteMemoInput" placeholder="秘密の質問、備考など">${escapeHtml(memo)}</textarea>
       </div>
       <div class="btn-row">
-        <button class="btn secondary" id="cancelSiteBtn">キャンセル</button>
-        <button class="btn" id="saveSiteBtn">保存</button>
+        <button class="btn secondary" id="cancelSiteBtn2">[&nbsp;CANCEL&nbsp;]</button>
+        <button class="btn" id="saveSiteBtn">[&nbsp;SAVE&nbsp;]</button>
       </div>
     </div>`;
   showOverlay();
@@ -1727,6 +1812,7 @@ function openSiteSheet(siteId) {
     renderFieldsEditor();
   });
   document.getElementById("cancelSiteBtn").addEventListener("click", closeOverlay);
+  document.getElementById("cancelSiteBtn2").addEventListener("click", closeOverlay);
   document.getElementById("saveSiteBtn").addEventListener("click", saveSiteFromSheet);
 }
 
@@ -1806,7 +1892,7 @@ async function saveSiteFromSheet() {
 const FOLDER_ICON_KEYS = ["folder", "dollar", "card", "bag", "tie", "play", "chat"];
 function renderIconPickerHtml(selected) {
   return `<div class="sfield">
-    <label>マーク</label>
+    <label>ICON</label>
     <div class="icon-picker">
       ${FOLDER_ICON_KEYS.map((k) => `<button type="button" class="icon-picker-btn ${k === selected ? "selected" : ""}" data-icon-choice="${k}" style="--icon-color:${FOLDER_ICON_COLORS[k]}" aria-label="${FOLDER_ICON_NAMES[k]}">${ICONS[k]}</button>`).join("")}
     </div>
@@ -1827,23 +1913,26 @@ function openCreateFolderSheet() {
   const overlay = getOverlay();
   overlay.innerHTML = `
     <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">新しいフォルダ</div>
+      <div class="sheet-head2">
+        <button type="button" class="back-btn" id="cancelFolderBtn" aria-label="閉じる">${ICONS.chevBack}</button>
+        <h3>NEW FOLDER</h3>
+      </div>
       <div class="sfield">
-        <label>フォルダ名</label>
+        <label>FOLDER NAME</label>
         <input type="text" id="folderNameInput" placeholder="例）銀行" />
       </div>
       ${renderIconPickerHtml(selectedIcon)}
       <div class="error-msg" id="folderNameError"></div>
       <div class="btn-row">
-        <button class="btn secondary" id="cancelFolderBtn">キャンセル</button>
-        <button class="btn" id="createFolderBtn">作成</button>
+        <button class="btn secondary" id="cancelFolderBtn2">[&nbsp;CANCEL&nbsp;]</button>
+        <button class="btn" id="createFolderBtn">[&nbsp;CREATE&nbsp;]</button>
       </div>
     </div>`;
   showOverlay();
   bindIconPicker(overlay, (icon) => { selectedIcon = icon; });
 
   document.getElementById("cancelFolderBtn").addEventListener("click", closeOverlay);
+  document.getElementById("cancelFolderBtn2").addEventListener("click", closeOverlay);
   document.getElementById("createFolderBtn").addEventListener("click", async () => {
     const name = document.getElementById("folderNameInput").value.trim();
     const errEl = document.getElementById("folderNameError");
@@ -1874,23 +1963,26 @@ function openRenameFolderSheet(folderId) {
   const overlay = getOverlay();
   overlay.innerHTML = `
     <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">フォルダ名を変更</div>
+      <div class="sheet-head2">
+        <button type="button" class="back-btn" id="cancelFolderBtn" aria-label="閉じる">${ICONS.chevBack}</button>
+        <h3>RENAME FOLDER</h3>
+      </div>
       <div class="sfield">
-        <label>フォルダ名</label>
+        <label>FOLDER NAME</label>
         <input type="text" id="folderNameInput" value="${escapeHtml(folder.name)}" placeholder="例）銀行" />
       </div>
       ${renderIconPickerHtml(selectedIcon)}
       <div class="error-msg" id="folderNameError"></div>
       <div class="btn-row">
-        <button class="btn secondary" id="cancelFolderBtn">キャンセル</button>
-        <button class="btn" id="renameFolderBtn">保存</button>
+        <button class="btn secondary" id="cancelFolderBtn2">[&nbsp;CANCEL&nbsp;]</button>
+        <button class="btn" id="renameFolderBtn">[&nbsp;SAVE&nbsp;]</button>
       </div>
     </div>`;
   showOverlay();
   bindIconPicker(overlay, (icon) => { selectedIcon = icon; });
 
   document.getElementById("cancelFolderBtn").addEventListener("click", closeOverlay);
+  document.getElementById("cancelFolderBtn2").addEventListener("click", closeOverlay);
   document.getElementById("renameFolderBtn").addEventListener("click", async () => {
     const name = document.getElementById("folderNameInput").value.trim();
     const errEl = document.getElementById("folderNameError");
@@ -1920,20 +2012,32 @@ function openSettingsSheet() {
   const overlay = getOverlay();
   overlay.innerHTML = `
     <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">設定</div>
-      <button class="settings-item" id="changePwBtn"><span class="si-icon">${ICONS.key}</span>マスターパスワードを変更</button>
-      <button class="settings-item" id="exportBtn"><span class="si-icon">${ICONS.download}</span>バックアップを書き出す（暗号化済み）</button>
-      <button class="settings-item" id="exportPlainBtn"><span class="si-icon">${ICONS.document}</span>テキストで書き出す（暗号化なし）</button>
-      <button class="settings-item" id="gdrivePlainBtn"><span class="si-icon">${ICONS.cloud}</span>テキストをGoogleドライブに保存（暗号化なし）</button>
-      <button class="settings-item gap-top" id="importBtn2"><span class="si-icon">${ICONS.upload}</span>バックアップファイルから復元する</button>
-      <input type="file" id="importFile2" accept="application/json" />
-      <button class="settings-item" id="gdriveRestoreBtn"><span class="si-icon">${ICONS.cloud}</span>Googleドライブから復元する</button>
-      <button class="settings-item danger" id="wipeBtn"><span class="si-icon">${ICONS.trash}</span>すべてのデータを削除</button>
+      <div class="sheet-head2">
+        <button type="button" class="back-btn" id="closeSettingsBtn" aria-label="戻る">${ICONS.chevBack}</button>
+        <h3>SETTINGS</h3>
+      </div>
+      <div class="settings-group-label">ACCOUNT</div>
+      <div class="settings-group">
+        <button type="button" class="settings-row" id="changePwBtn"><span class="si-icon">${ICONS.key}</span><span style="flex:1;">CHANGE MASTER PASSWORD</span><span class="si-chev">${ICONS.chevRight}</span></button>
+      </div>
+      <div class="settings-group-label">BACKUP</div>
+      <div class="settings-group">
+        <button type="button" class="settings-row" id="exportBtn"><span class="si-icon">${ICONS.download}</span><span style="flex:1;">EXPORT BACKUP (ENCRYPTED)</span><span class="si-chev">${ICONS.chevRight}</span></button>
+        <button type="button" class="settings-row" id="exportPlainBtn"><span class="si-icon">${ICONS.document}</span><span style="flex:1;">EXPORT AS TEXT</span><span class="si-chev">${ICONS.chevRight}</span></button>
+        <button type="button" class="settings-row" id="gdrivePlainBtn"><span class="si-icon">${ICONS.cloud}</span><span style="flex:1;">SAVE TEXT TO DRIVE</span><span class="si-chev">${ICONS.chevRight}</span></button>
+      </div>
+      <div class="settings-group-label">RECOVERY</div>
+      <div class="settings-group">
+        <button type="button" class="settings-row" id="importBtn2"><span class="si-icon">${ICONS.upload}</span><span style="flex:1;">RECOVER FROM FILE</span><span class="si-chev">${ICONS.chevRight}</span></button>
+        <input type="file" id="importFile2" accept="application/json" style="display:none;" />
+        <button type="button" class="settings-row" id="gdriveRestoreBtn"><span class="si-icon">${ICONS.cloud}</span><span style="flex:1;">RECOVER FROM DRIVE</span><span class="si-chev">${ICONS.chevRight}</span></button>
+      </div>
+      <div class="settings-group danger">
+        <button type="button" class="settings-row danger" id="wipeBtn"><span class="si-icon">${ICONS.trash}</span><span style="flex:1;">DELETE ALL DATA</span><span class="si-chev">${ICONS.chevRight}</span></button>
+      </div>
       <div class="settings-note">
         データはこの端末に暗号化して保存され、外部には送信されません。Safariの「履歴とデータを消去」で消えるため、定期的なバックアップをおすすめします。Googleドライブの同期設定は、上部の${ICONS.cloud}アイコンから行えます。
       </div>
-      <button class="btn secondary" id="closeSettingsBtn">閉じる</button>
     </div>`;
   showOverlay();
 
@@ -1945,13 +2049,15 @@ function openSettingsSheet() {
   document.getElementById("importFile2").addEventListener("change", handleImportFileSettings);
   document.getElementById("exportPlainBtn").addEventListener("click", exportPlainText);
   document.getElementById("gdrivePlainBtn").addEventListener("click", savePlainTextToGoogleDrive);
-  document.getElementById("wipeBtn").addEventListener("click", () => {
-    if (confirm("本当にすべてのデータを削除しますか？\n\nこの操作は取り消せません。")) {
-      if (confirm("最終確認：完全に削除してよろしいですか？")) {
-        localStorage.removeItem(STORE_KEY);
-        location.reload();
-      }
-    }
+  document.getElementById("wipeBtn").addEventListener("click", async () => {
+    const ok1 = await confirmSheet({ title: "DELETE ALL DATA", danger: true, confirmLabel: "DELETE",
+      html: "この端末に保存されているすべてのフォルダ・アカウント情報が完全に削除されます。バックアップを取っていない場合、この操作は絶対に取り消せません。" });
+    if (!ok1) return;
+    const ok2 = await confirmSheet({ title: "FINAL CHECK", danger: true, confirmLabel: "DELETE",
+      html: "最終確認：本当に完全に削除してよろしいですか？" });
+    if (!ok2) return;
+    localStorage.removeItem(STORE_KEY);
+    location.reload();
   });
 }
 
@@ -1960,19 +2066,24 @@ function openCloudSyncSheet() {
   const overlay = getOverlay();
   overlay.innerHTML = `
     <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">Googleドライブ同期</div>
-      <button class="settings-item" id="syncNowBtn">${ICONS.cloud} 今すぐ同期する</button>
+      <div class="sheet-head2">
+        <button type="button" class="back-btn" id="closeSyncBtn" aria-label="閉じる">${ICONS.chevBack}</button>
+        <h3>DRIVE SYNC</h3>
+      </div>
+      <div class="settings-group">
+        <button type="button" class="settings-row" id="syncNowBtn"><span class="si-icon">${ICONS.cloud}</span><span style="flex:1;">SYNC NOW</span></button>
+      </div>
       <label class="checkbox-line autosync-line">
         <input type="checkbox" id="autosyncToggle" ${localStorage.getItem(GDRIVE_AUTOSYNC_KEY) === "1" ? "checked" : ""} />
         アカウントの追加・編集のたびに自動でGoogleドライブに保存する
       </label>
-      <button class="settings-item" id="repickFolderBtn"><span class="si-icon">${ICONS.folder}</span>保存先フォルダを選び直す</button>
+      <div class="settings-group">
+        <button type="button" class="settings-row" id="repickFolderBtn"><span class="si-icon">${ICONS.folder}</span><span style="flex:1;">CHANGE SAVE FOLDER</span></button>
+      </div>
       <div class="settings-note">
         「今すぐ同期する」を押すと、初回のみGoogleへのログイン確認と、保存先フォルダを選ぶ画面が表示されます。以後は上のチェックがオンの間、アカウントを追加・編集・削除するたびに同じファイルへ自動で上書き保存され、リロードやロック解除のたびに他の端末の変更を自動で取り込みます（常時監視はしていないので、最新の状態を見たい時は都度リロードしてください）。別の端末で初めて使う場合は、セットアップ画面の「Googleドライブの既存データを引き継ぐ」で同じマスターパスワードを使うようにしてください。<br>
         「保存先フォルダを選び直す」は、これ以降の保存先だけを変更します。今まで保存していたファイルは移動しません。
       </div>
-      <button class="btn secondary" id="closeSyncBtn">閉じる</button>
     </div>`;
   showOverlay();
 
@@ -2017,14 +2128,17 @@ function openSearchSheet() {
   };
   overlay.innerHTML = `
     <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">SEARCH</div>
+      <div class="sheet-head2">
+        <button type="button" class="back-btn" id="closeSearchBtn" aria-label="閉じる">${ICONS.chevBack}</button>
+        <h3>SEARCH</h3>
+      </div>
       <div class="sfield">
         <input type="text" id="searchSheetInput" placeholder="アカウント名で検索" autocomplete="off" />
       </div>
       <div id="searchResultsBox"></div>
     </div>`;
   showOverlay();
+  document.getElementById("closeSearchBtn").addEventListener("click", closeOverlay);
   const input = document.getElementById("searchSheetInput");
   input.addEventListener("input", (e) => renderResults(e.target.value));
   renderResults("");
@@ -2035,28 +2149,31 @@ function openChangePasswordSheet() {
   const overlay = getOverlay();
   overlay.innerHTML = `
     <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">マスターパスワードを変更</div>
+      <div class="sheet-head2">
+        <button type="button" class="back-btn" id="cancelChangePw" aria-label="閉じる">${ICONS.chevBack}</button>
+        <h3>CHANGE PASSWORD</h3>
+      </div>
       <div class="sfield">
-        <label>現在のパスワード</label>
+        <label>CURRENT PASSWORD</label>
         <input type="password" id="curPw" inputmode="numeric" autocomplete="current-password" />
       </div>
       <div class="sfield">
-        <label>新しいパスワード</label>
+        <label>NEW PASSWORD</label>
         <input type="password" id="newPw1" inputmode="numeric" autocomplete="new-password" />
       </div>
       <div class="sfield">
-        <label>新しいパスワード（確認）</label>
+        <label>CONFIRM NEW PASSWORD</label>
         <input type="password" id="newPw2" inputmode="numeric" autocomplete="new-password" />
       </div>
       <div class="error-msg" id="changePwError"></div>
       <div class="btn-row">
-        <button class="btn secondary" id="cancelChangePw">キャンセル</button>
-        <button class="btn" id="confirmChangePw">変更する</button>
+        <button class="btn secondary" id="cancelChangePw2">[&nbsp;CANCEL&nbsp;]</button>
+        <button class="btn" id="confirmChangePw">[&nbsp;SAVE&nbsp;]</button>
       </div>
     </div>`;
   showOverlay();
   document.getElementById("cancelChangePw").addEventListener("click", closeOverlay);
+  document.getElementById("cancelChangePw2").addEventListener("click", closeOverlay);
   document.getElementById("confirmChangePw").addEventListener("click", async () => {
     const cur = document.getElementById("curPw").value;
     const n1 = document.getElementById("newPw1").value;
@@ -2139,11 +2256,8 @@ async function exportPlainText() {
     alert("書き出せるアカウントがありません");
     return;
   }
-  const ok = confirm(
-    "この書き出しファイルは、パスワードが暗号化されていない読める状態のテキストです。\n\n" +
-    "他のパスワード管理アプリへ移行する時など、必要な場合だけご利用ください。書き出したファイルは、使い終わったら削除することをおすすめします。\n\n" +
-    "続けますか？"
-  );
+  const ok = await confirmSheet({ title: "EXPORT AS TEXT", danger: true, confirmLabel: "EXPORT",
+    html: "この書き出しファイルは、パスワードが暗号化されていない読める状態のテキストです。<br><br>他のパスワード管理アプリへ移行する時など、必要な場合だけご利用ください。書き出したファイルは、使い終わったら削除することをおすすめします。" });
   if (!ok) return;
 
   const text = buildPlainTextExport();
@@ -2160,11 +2274,8 @@ async function savePlainTextToGoogleDrive() {
     alert("書き出せるアカウントがありません");
     return;
   }
-  const ok = confirm(
-    "Googleドライブに保存されるこのファイルは、パスワードが暗号化されていない読める状態のテキストです。\n\n" +
-    "他のパスワード管理アプリへ移行する時など、必要な場合だけご利用ください。\n\n" +
-    "続けますか？"
-  );
+  const ok = await confirmSheet({ title: "SAVE TEXT TO DRIVE", danger: true, confirmLabel: "SAVE",
+    html: "Googleドライブに保存されるこのファイルは、パスワードが暗号化されていない読める状態のテキストです。<br><br>他のパスワード管理アプリへ移行する時など、必要な場合だけご利用ください。" });
   if (!ok) return;
   if (!(await ensureGdriveAccessToken())) { offerGdriveReconnect(); return; }
 
@@ -2188,11 +2299,11 @@ function handleImportFile(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try {
       const obj = JSON.parse(reader.result);
       if (!obj.salt || !obj.iv || !obj.data || !obj.iterations) throw new Error("invalid");
-      if (!confirm("このバックアップで現在のデータを置き換えます。\n\nよろしいですか？")) return;
+      if (!(await confirmSheet({ title: "RECOVER FROM FILE", danger: true, confirmLabel: "RECOVER", html: "このバックアップで現在のデータを置き換えます。<br><br>よろしいですか？" }))) return;
       saveStore({ salt: obj.salt, iterations: obj.iterations, iv: obj.iv, data: obj.data });
       showToast("復元しました。ロック解除してください");
       lockVault();
@@ -2255,7 +2366,7 @@ function openRestorePasswordSheet(backupStore) {
       errEl.textContent = "パスワードが違います";
       return;
     }
-    if (!confirm("現在のアカウントデータを、このバックアップの内容に置き換えます。\n\nよろしいですか？")) return;
+    if (!(await confirmSheet({ title: "RECOVER", danger: true, confirmLabel: "RECOVER", html: "現在のアカウントデータを、このバックアップの内容に置き換えます。<br><br>よろしいですか？" }))) return;
     state.vault = normalizeVault(importedVault);
     state.openSiteId = null;
     state.maskState.clear();
