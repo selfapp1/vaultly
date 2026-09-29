@@ -98,10 +98,16 @@
 
   /* ---- Main screen ---- */
   .rain-wrap { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--bg); }
-  .rain-wrap .rain-col { position: absolute; top: -40%; font-size: 13px; line-height: 1.05; color: var(--accent-2); white-space: pre; text-shadow: 0 0 4px currentColor, 0 0 9px currentColor; -webkit-text-stroke: 0.35px currentColor; animation: rainFall linear infinite; opacity: 0; transition: opacity .4s ease; }
-  .rain-wrap.active .rain-col, .rain-wrap.flash .rain-col { opacity: 0.9; }
-  .rain-wrap.flash .rain-col { animation-iteration-count: 1; }
-  .rain-wrap.resetting .rain-col { animation-name: none !important; opacity: 0 !important; }
+  .rain-wrap .rain-col {
+    position: absolute; top: -40%; font-size: 13px; line-height: 1.05; color: var(--accent-2); white-space: pre;
+    text-shadow: 0 0 4px currentColor, 0 0 9px currentColor; -webkit-text-stroke: 0.35px currentColor;
+    animation: rainFall linear infinite; animation-play-state: paused;
+    opacity: 0; transition: opacity .4s ease;
+  }
+  .rain-wrap .rain-col .rain-head { color: #fff; text-shadow: 0 0 5px #fff, 0 0 11px #fff; -webkit-text-stroke: 0.35px #fff; }
+  .rain-wrap.active .rain-col, .rain-wrap.flash .rain-col { opacity: 0.9; animation-play-state: running; }
+  .rain-wrap.flash .rain-col { animation-iteration-count: 1; animation-fill-mode: forwards; }
+  .rain-wrap.resetting .rain-col { animation-name: none !important; opacity: 0 !important; animation-play-state: paused; }
   @keyframes rainFall { from { transform: translateY(0); } to { transform: translateY(180%); } }
   header.top {
     position: sticky; top: 0; z-index: 5;
@@ -1266,6 +1272,7 @@ function renderFolderGroups() {
 }
 
 /* ========================= 背景の流れるコード(CodeVault) ========================= */
+const RAIN_FALL_MS = 3600; // 全ての列を必ずこの同じ速さで、一番下まで流し切る
 let rainPulseSeq = 0;
 function pulseRain() {
   const rw = document.getElementById("rainWrap");
@@ -1278,6 +1285,10 @@ function pulseRain() {
     if (rainPulseSeq !== seq) return; // その間に別の操作があれば古い方は反映しない
     rw.classList.remove("resetting");
     rw.classList.add("flash");
+    setTimeout(() => {
+      if (rainPulseSeq !== seq) return;
+      rw.classList.remove("flash"); // 一番下まで流れ切ってから、フェードアウトして消える(上に戻らない)
+    }, RAIN_FALL_MS + 80);
   }, 60);
 }
 function setRainActive(on) {
@@ -1290,15 +1301,16 @@ function setRainActive(on) {
 function renderRainColumns() {
   const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const colCount = 16;
+  const durS = (RAIN_FALL_MS / 1000).toFixed(2);
   const cols = [];
   for (let i = 0; i < colCount; i++) {
     const left = ((i + 0.5) / colCount) * 100;
     const len = 22 + Math.floor(Math.random() * 14);
-    let text = "";
-    for (let j = 0; j < len; j++) text += chars[Math.floor(Math.random() * chars.length)] + "\n";
-    const dur = (2.6 + Math.random() * 1.8).toFixed(2);
-    const delay = (Math.random() * -dur).toFixed(2);
-    cols.push(`<div class="rain-col" style="left:${left.toFixed(2)}%;animation-duration:${dur}s;animation-delay:${delay}s;">${text}</div>`);
+    let body = "";
+    for (let j = 0; j < len - 1; j++) body += chars[Math.floor(Math.random() * chars.length)] + "\n";
+    const head = chars[Math.floor(Math.random() * chars.length)]; // 一番下(先頭)の文字だけ白く光らせる
+    // すべての列を同じdurationにすることで、速さを完全に揃える(列によってバラバラにならない)
+    cols.push(`<div class="rain-col" style="left:${left.toFixed(2)}%;animation-duration:${durS}s;">${body}<span class="rain-head">${head}</span></div>`);
   }
   return cols.join("");
 }
@@ -1311,7 +1323,7 @@ function renderFolderCard({ folder, sites }) {
     ? sites.map(renderSiteCard).join("")
     : `<div class="empty-state" style="padding:16px 0;">このフォルダは空です</div>`;
   const folderCardHtml = `
-    <div class="folder-card ${isOpen ? "open" : ""}" data-folder="${folder.id}" style="${isOpen ? "" : `--cv-c:${iconColor};border-color:${iconColor}`}">
+    <div class="folder-card ${isOpen ? "open" : ""}" data-folder="${folder.id}">
       <div class="folder-head" data-toggle-folder="${folder.id}">
         <div class="folder-icon" style="--icon-color:${iconColor}">${ICONS[iconKey]}</div>
         <div class="folder-name-wrap">
