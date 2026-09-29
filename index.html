@@ -72,10 +72,12 @@
 
   .btn {
     appearance: none; cursor: pointer;
-    padding: 13px; border-radius: 0; font-size: 15px; font-weight: 400; letter-spacing: 0.02em;
+    padding: 13px; border-radius: 0; font-size: 13px; font-weight: 400; letter-spacing: 0.02em;
     width: 100%; max-width: 340px; color: var(--accent-1);
     background: var(--surface); border: 1px solid var(--accent-1);
+    box-shadow: 0 0 4px currentColor, 0 0 9px currentColor; transition: transform .12s ease, filter .12s ease;
   }
+  .btn:active { transform: scale(0.96); filter: brightness(1.3); }
   .btn.secondary {
     background: var(--surface); color: rgba(231,247,236,0.4); border: 1px solid rgba(231,247,236,0.4);
   }
@@ -88,7 +90,7 @@
   .warn-box {
     position: relative; max-width: 340px; text-align: left; background: var(--surface);
     border: 1px solid rgba(255,90,90,0.4); border-radius: 0; padding: 16px;
-    font-size: 13.5px; color: var(--danger); line-height: 1.8; margin-bottom: 22px;
+    font-size: 11.5px; color: var(--danger); line-height: 1.8; margin-bottom: 22px;
     text-shadow: 0 0 4px currentColor, 0 0 9px currentColor;
     display: flex; gap: 11px; align-items: flex-start;
     --cv-c: var(--danger);
@@ -99,7 +101,7 @@
   /* full-screen sub-sheet header, traced from the mockup's back-arrow pattern */
   .sheet-head2 {
     display: flex; align-items: center; gap: 14px;
-    margin: -18px -18px 18px; padding: 4px 18px 14px;
+    margin: 0 -24px 20px; padding: 22px 24px 14px;
     border-bottom: 1px solid rgba(0,143,17,0.25);
   }
   .sheet-head2 .back-btn {
@@ -107,10 +109,10 @@
   }
   .sheet-head2 .back-btn svg { width: 18px; height: 18px; }
   .sheet-head2 h3 {
-    font-size: 21px; font-weight: 400; letter-spacing: 0.03em; color: var(--text); margin: 0; flex: 1;
+    font-size: 19px; font-weight: 400; letter-spacing: 0.03em; color: var(--text); margin: 0; flex: 1;
   }
   .settings-group-label {
-    font-size: 12px; color: rgba(0,143,17,0.7); letter-spacing: 0.1em; text-transform: uppercase;
+    font-size: 9px; color: rgba(0,143,17,0.7); letter-spacing: 0.1em; text-transform: uppercase;
     margin: 20px 0 6px;
   }
   .settings-group-label:first-child { margin-top: 0; }
@@ -121,7 +123,7 @@
   .settings-group.danger { border-color: rgba(255,90,90,0.35); box-shadow: 0 0 4px rgba(255,90,90,0.35), 0 0 9px rgba(255,90,90,0.35); --cv-c: var(--danger); margin-top: 20px; }
   .settings-row {
     display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: none; border: none;
-    padding: 13px 4px; color: var(--text); font-size: 14.5px; cursor: pointer;
+    padding: 13px 4px; color: var(--text); font-size: 12px; cursor: pointer;
   }
   .settings-row + .settings-row { border-top: 1px solid rgba(231,247,236,0.08); }
   .settings-row .si-icon { display: flex; flex-shrink: 0; color: var(--accent-2); }
@@ -129,7 +131,7 @@
   .settings-row .si-chev svg { width: 12px; height: 12px; }
   .settings-row .si-chev { display: flex; flex-shrink: 0; color: var(--accent-2); }
   .settings-row.danger, .settings-row.danger .si-icon, .settings-row.danger .si-chev { color: var(--danger); }
-  .settings-note { font-size: 12px; color: rgba(231,247,236,0.35); line-height: 1.8; margin: 18px 0 0; }
+  .settings-note { font-size: 10px; color: rgba(231,247,236,0.35); line-height: 1.8; margin: 18px 0 0; }
 
   /* ---- Main screen ---- */
   .rain-wrap { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--bg); opacity: 0; transition: opacity .6s ease; }
@@ -140,7 +142,7 @@
   .rain-wrap.flash *{animation-play-state:running !important; animation-iteration-count:1 !important;}
   .rain-wrap.resetting *{animation-name:none !important; animation-play-state:paused !important;}
   .rain-shade{position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.2) 30%, rgba(0,0,0,0.6) 100%);}
-  .rcol2{position:absolute; top:0; width:14px; overflow:hidden; display:flex; flex-direction:column; transform:scale(.62); transform-origin:0 0;}
+  .rcol2{position:absolute; top:0; width:14px; overflow:hidden; display:flex; flex-direction:column; }
   .gcell{position:relative; height:9px; line-height:9px; text-align:center; font-family:'Share Tech Mono',monospace; font-size:10px; -webkit-text-stroke:0.35px currentColor;}
   .gc1,.gc2{position:absolute; inset:0; opacity:0; animation-iteration-count:infinite;}
   @keyframes grow_pA_br{
@@ -237,30 +239,31 @@
     display: flex; align-items: center; justify-content: space-between;
   }
   header.top h2 {
-    font-size: 34px; margin: 0; font-weight: 400; letter-spacing: 0.04em; line-height: 1;
+    font-size: 30px; margin: 0; font-weight: 400; letter-spacing: 0.04em; line-height: 1;
     color: var(--text);
   }
-  .header-icons { display: flex; align-items: center; gap: 17px; }
+  .header-icons { display: flex; align-items: center; gap: 14px; }
   .icon-btn {
     background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: center;
     color: var(--accent-2); cursor: pointer; transition: transform .12s ease, filter .12s ease;
   }
   .icon-btn:active { transform: scale(0.9); filter: brightness(1.4); }
-  .icon-btn svg { width: 21px; height: 21px; }
+  .icon-btn svg { width: 14px; height: 14px; }
+  .header-icons .icon-btn:nth-child(-n+2) svg { width: 16px; height: 16px; }
   .header-subtitle {
     padding: 6px 24px 0; position: relative; z-index: 1;
-    font-size: 12px; color: rgba(0,143,17,0.75); letter-spacing: 0.08em;
+    font-size: 10px; color: rgba(0,143,17,0.75); letter-spacing: 0.08em;
   }
   main.content { padding: 20px 20px 16px; position: relative; z-index: 1; flex: 1; }
   .empty-state { text-align: center; color: var(--text-dim); padding: 60px 20px; font-size: 14px; line-height: 1.8; }
 
   .site-card {
-    position: relative; background: var(--surface); border: 1px solid var(--cv-c, rgba(0,143,17,0.5));
-    box-shadow: 0 0 4px var(--cv-c, rgba(0,143,17,0.5)), 0 0 9px var(--cv-c, rgba(0,143,17,0.5));
+    position: relative; background: var(--surface); border: 1px solid var(--cv-b, rgba(0,143,17,0.35)); padding: 12px 15px;
+    box-shadow: 0 0 4px var(--cv-b, rgba(0,143,17,0.35)), 0 0 9px var(--cv-b, rgba(0,143,17,0.35));
     margin-bottom: 11px; overflow: hidden; opacity: var(--card-dim, 1); transform: scale(var(--card-scale, 1));
     transition: opacity .4s ease, transform .4s ease, border-color .4s ease, box-shadow .4s ease;
   }
-  .site-head { display: flex; align-items: center; gap: 13px; padding: 15px 17px; cursor: pointer; }
+  .site-head { display: flex; align-items: center; gap: 13px; cursor: pointer; }
   .badge-ring {
     position: relative; width: 30px; height: 30px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; color: var(--cv-c, var(--accent-2));
@@ -272,37 +275,37 @@
   .folder-head .badge-ring { width: 36px; height: 36px; }
   .folder-head .badge-ring svg { width: 17px; height: 17px; }
   .site-name-wrap { flex: 1; min-width: 0; }
-  .site-name { font-weight: 400; font-size: 16.5px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .site-sub { font-size: 12px; color: rgba(231,247,236,0.4); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .site-name { font-weight: 400; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .site-sub { font-size: 9px; color: rgba(231,247,236,0.4); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .chevron-icon { color: var(--cv-c, var(--accent-2)); transition: transform .4s cubic-bezier(.16,1,.3,1); flex-shrink: 0; }
   .chevron-icon svg { width: 13px; height: 13px; display: block; }
   .site-card.open .chevron-icon { transform: rotate(180deg); }
 
-  .site-body { display: grid; grid-template-rows: 0fr; padding: 0 17px; transition: grid-template-rows .45s cubic-bezier(.16,1,.3,1); }
+  .site-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .45s cubic-bezier(.16,1,.3,1); }
   .site-card.open .site-body { grid-template-rows: 1fr; }
   .sb-inner { overflow: hidden; min-height: 0; opacity: 0; transform: translateY(-4px); transition: opacity .35s ease .05s, transform .35s ease .05s; }
   .site-card.open .sb-inner { opacity: 1; transform: translateY(0); }
-  .sb-pad { padding-bottom: 15px; }
-  .site-card.open { --cv-c: #00FF41; }
+  .sb-pad { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(0,143,17,0.25); }
+  .site-card.open { --cv-c: #00FF41; --cv-b: rgba(0,255,65,0.85); }
 
   .folder-card {
-    position: relative; background: var(--surface); border: 1px solid var(--cv-c, rgba(0,143,17,0.5));
-    box-shadow: 0 0 4px var(--cv-c, rgba(0,143,17,0.5)), 0 0 9px var(--cv-c, rgba(0,143,17,0.5));
+    position: relative; background: var(--surface); border: 1px solid var(--cv-b, rgba(0,143,17,0.5));
+    box-shadow: 0 0 4px var(--cv-b, rgba(0,143,17,0.5)), 0 0 9px var(--cv-b, rgba(0,143,17,0.5));
     margin-bottom: 11px; overflow: hidden; opacity: var(--card-dim, 1); transform: scale(var(--card-scale, 1));
     transition: opacity .4s ease, transform .4s ease, border-color .4s ease, box-shadow .4s ease;
   }
   .folder-head { display: flex; align-items: center; gap: 13px; padding: 15px 17px; cursor: pointer; }
   .folder-name-wrap { flex: 1; min-width: 0; }
-  .folder-name { font-weight: 400; font-size: 26px; color: var(--text); letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .folder-name { font-weight: 400; font-size: 23px; color: var(--text); letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .folder-card .chevron-icon svg { width: 14px; height: 14px; }
   .folder-card.open > .folder-head .chevron-icon { transform: rotate(180deg); }
   .folder-body { display: grid; grid-template-rows: 0fr; padding: 0 17px; transition: grid-template-rows .45s cubic-bezier(.16,1,.3,1); }
   .folder-card.open .folder-body { grid-template-rows: 1fr; }
   .fb-inner { overflow: hidden; min-height: 0; }
   .fb-pad { padding: 2px 0 15px; }
-  .folder-card.open { --cv-c: #00FF41; }
-  .folder-body .swipe-row { margin-bottom: 10px; }
-  .folder-body .swipe-row:last-child { margin-bottom: 0; }
+  .folder-card.open { --cv-c: #00FF41; --cv-b: rgba(0,255,65,0.85); }
+  .folder-head .site-sub { font-size: 10px; color: rgba(231,247,236,0.45); margin-top: 3px; }
+  .folder-body .swipe-row { margin-bottom: 8px; }
 
   .swipe-row { position: relative; overflow: visible; border-radius: 4px; margin-bottom: 12px; background: var(--bg); }
   .swipe-row .swipe-fg { position: relative; z-index: 1; background: var(--bg); border-radius: 4px; }
@@ -324,19 +327,16 @@
   .dragging { box-shadow: 0 14px 30px rgba(0,0,0,0.28); opacity: 0.96; }
   .reorder-placeholder { border-radius: 16px; background: var(--surface-2); opacity: 0.5; }
 
-  .field-row {
-    display: flex; align-items: center; gap: 10px;
-    background: var(--surface-2); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px;
-    cursor: pointer; border: 1px solid transparent;
-  }
-  .field-row:active { border-color: var(--accent-1); }
-  .field-row .flabel { font-size: 12.5px; color: var(--text-dim); font-weight: 500; margin-bottom: 2px; }
-  .field-row .fvalue { font-size: 16px; font-weight: 600; word-break: break-all; }
+  .field-row { display: flex; align-items: center; gap: 10px; padding: 11px 2px; cursor: pointer; }
+  .field-row + .field-row { border-top: 1px solid rgba(231,247,236,0.08); }
+  .field-row .flabel { font-size: 9px; color: rgba(0,143,17,0.7); letter-spacing: 0.08em; margin-bottom: 4px; text-transform: uppercase; }
+  .field-row .fvalue { font-size: 13px; color: var(--text); word-break: break-all; }
   .field-row .ftext { flex: 1; min-width: 0; }
-  .field-row .feye { color: var(--text-dim); font-size: 16px; padding: 4px; flex-shrink: 0; }
-  .field-row .fcopy { color: var(--accent-1); font-size: 16px; padding: 4px; flex-shrink: 0; }
+  .field-row .feye, .field-row .fcopy { color: rgba(231,247,236,0.45); display: flex; flex-shrink: 0; }
+  .field-row .feye svg, .field-row .fcopy svg { width: 13px; height: 13px; stroke-width: 1.7; }
+  .field-row:active .fcopy { color: var(--accent-1); }
 
-  .memo-box { font-size: 13px; color: var(--text-dim); background: var(--surface-2); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; white-space: pre-wrap; word-break: break-word; }
+  .memo-box { font-size: 10px; margin-top: 4px; color: var(--text-dim); background: var(--surface-2); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; white-space: pre-wrap; word-break: break-word; }
 
   .fab {
     position: relative; z-index: 1;
@@ -344,39 +344,39 @@
     background: var(--surface); border: 1px solid rgba(0,143,17,0.6);
     color: var(--accent-2); font-size: 14px; font-weight: 400; letter-spacing: 0.02em;
     display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+    box-shadow: 0 0 4px currentColor, 0 0 9px currentColor;
     transition: transform .12s ease, filter .12s ease;
   }
   .fab:active { transform: scale(0.98); filter: brightness(1.3); }
 
   /* ---- Modal / sheet ---- */
   .overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 20;
-    display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity .2s;
+    position: fixed; inset: 0; z-index: 20; background: linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.2) 30%, rgba(0,0,0,0.6) 100%);
+    display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity .2s;
   }
   .overlay.show { opacity: 1; pointer-events: auto; }
   .sheet {
-    background: var(--surface-2); width: 100%; max-height: 92vh; overflow-y: auto;
-    border-radius: 4px 4px 0 0; padding: 18px 18px calc(24px + var(--safe-bottom));
-    transform: translateY(100%); transition: transform .25s ease;
-    border-top: 1px solid var(--accent-2);
-    box-shadow: 0 0 4px var(--accent-2), 0 0 9px var(--accent-2);
-    --cv-c: var(--accent-2);
+    width: 100%; height: 100%; overflow-y: auto; background: transparent; border: none; box-shadow: none; border-radius: 0;
+    padding: 0 24px calc(24px + var(--safe-bottom)); --cv-c: var(--accent-2);
   }
-  .overlay.show .sheet { transform: translateY(0); }
-  .sheet-handle { width: 40px; height: 5px; background: var(--border); border-radius: 3px; margin: 0 auto 14px; }
+  .overlay.show .sheet { animation: screenEnter 0.5s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes screenEnter { 0% { opacity: 0; transform: translateY(14px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+  body.sub-open header.top, body.sub-open main.content, body.sub-open .header-subtitle, body.sub-open .fab { visibility: hidden; }
+  .sheet-handle { height: 22px; visibility: hidden; }
   .sheet-title { font-size: 16px; font-weight: 800; margin: 0 0 16px; letter-spacing: 0.05em; color: var(--accent-1); text-shadow: 0 0 4px currentColor, 0 0 9px currentColor; }
 
   .sfield { margin-bottom: 14px; }
   .sfield label {
-    display: block; font-size: 12px; color: rgba(0,143,17,0.7); margin-bottom: 6px;
+    display: block; font-size: 9px; color: rgba(0,143,17,0.7); margin-bottom: 6px;
     font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase;
   }
   .sfield-row { display: flex; gap: 8px; align-items: flex-end; }
   .sfield-row .sfield { flex: 1; margin-bottom: 0; }
   .sfield input, .sfield textarea, .sfield select {
     width: 100%; padding: 11px 13px; border-radius: 0; border: 1px solid rgba(0,143,17,0.4);
-    background: var(--surface); color: var(--text); font-size: 13px; outline: none;
+    background: var(--surface); color: var(--text); font-size: 13px; outline: none; font-family: inherit;
   }
+  .sfield select { appearance: none; -webkit-appearance: none; border-radius: 0; }
   .sfield textarea { resize: vertical; min-height: 60px; }
   .sfield input:focus, .sfield textarea:focus, .sfield select:focus { border-color: var(--accent-1); }
 
@@ -391,32 +391,40 @@
   .icon-picker-btn svg { width: 19px; height: 19px; }
   .icon-picker-btn.selected { background: color-mix(in srgb, var(--icon-color) 13%, transparent); border: 2px solid var(--icon-color); }
 
-  .field-block {
-    background: var(--surface);
-    border: 1px solid var(--border); border-radius: 4px; padding: 12px; margin-bottom: 10px;
-  }
-  .field-block-top { display: flex; flex-direction: column; gap: 6px; }
+  .field-block { display: flex; gap: 8px; margin-bottom: 10px; align-items: stretch; }
+  .field-block-top { display: flex; gap: 8px; flex: 1; min-width: 0; }
   .fLabelInput {
-    width: 100%; padding: 7px 10px; border-radius: 4px; border: 1px solid var(--border);
-    background: var(--surface-2); color: var(--text-dim); font-size: 12px; font-weight: 700; outline: none;
+    width: 92px; flex-shrink: 0; padding: 10px 11px; border: 1px solid rgba(0,143,17,0.3); border-radius: 0;
+    background: var(--surface); color: rgba(231,247,236,0.5); font-size: 11px; outline: none; font-family: inherit;
   }
   .fLabelInput:focus { border-color: var(--accent-1); color: var(--text); }
   .fValueInput {
-    width: 100%; padding: 12px 13px; border-radius: 4px; border: 1px solid var(--border);
-    background: var(--surface-2); color: var(--text); font-size: 15.5px; outline: none;
+    flex: 1; min-width: 0; padding: 10px 11px; border: 1px solid rgba(0,143,17,0.4); border-radius: 0;
+    background: var(--surface); color: var(--text); font-size: 12px; outline: none; font-family: inherit;
   }
   .fValueInput:focus { border-color: var(--accent-1); box-shadow: 0 0 4px var(--accent-1), 0 0 9px var(--accent-1); }
-  .field-block-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
-  .remove-field-btn { color: var(--danger); font-size: 12.5px; font-weight: 700; background: none; border: none; cursor: pointer; text-shadow: 0 0 4px currentColor, 0 0 9px currentColor; }
-  .add-field-btn { width: 100%; padding: 11px; border-radius: 4px; border: 1px dashed var(--accent-2); background: none; color: var(--accent-1); font-weight: 700; font-size: 13.5px; cursor: pointer; margin-bottom: 16px; }
+  .field-block-actions { display: flex; align-items: center; }
+  .remove-field-btn { color: var(--danger); font-size: 14px; background: none; border: none; cursor: pointer; padding: 0 2px; }
+  .add-field-btn { width: 100%; padding: 10px; border-radius: 0; text-align: center; border: 1px dashed rgba(0,143,17,0.4); font-family: inherit; background: none; color: var(--accent-2); font-size: 11px; cursor: pointer; margin-bottom: 16px; }
 
-  .sheet .btn-row { max-width: none; margin-top: 6px; }
+  .sheet .btn-row { max-width: none; margin-top: 22px; }
   .sheet .btn { max-width: none; }
 
+  .search-head { display: flex; align-items: center; gap: 12px; margin: 0 -24px 18px; padding: 22px 24px 14px; border-bottom: 1px solid rgba(0,143,17,0.25); }
+  .search-box { flex: 1; display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid rgba(0,143,17,0.5); padding: 9px 12px; }
+  .search-box svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--accent-2); }
+  .search-box input { flex: 1; min-width: 0; background: none; border: none; outline: none; color: var(--text); font-size: 13px; font-family: inherit; padding: 0; }
+  .search-label { font-size: 9px; color: rgba(0,143,17,0.7); letter-spacing: 0.1em; margin-bottom: 10px; }
+  .search-card { position: relative; background: var(--surface); border: 1px solid rgba(0,143,17,0.7); padding: 15px 17px; overflow: hidden; cursor: pointer; margin-bottom: 8px; --cv-c: #00FF41; display: flex; align-items: center; gap: 13px; }
+  .search-card .badge-ring { width: 36px; height: 36px; }
+  .search-card .badge-ring svg { width: 17px; height: 17px; }
+  .search-card .sname { font-size: 18px; color: var(--text); }
+  .search-card .sname b { font-weight: 400; color: #00FF41; }
+  .search-card .ssub { font-size: 10px; color: rgba(231,247,236,0.45); margin-top: 3px; }
   /* toast */
   #toast {
     position: fixed; left: 50%; bottom: calc(30px + var(--safe-bottom)); transform: translateX(-50%) translateY(20px);
-    background: var(--surface-2); color: var(--accent-1); border: 1px solid var(--accent-1); padding: 10px 18px; border-radius: 4px; font-size: 13.5px;
+    background: var(--surface-2); color: var(--accent-1); border: 1px solid var(--accent-1); padding: 10px 18px; border-radius: 4px; font-size: 12px;
     opacity: 0; transition: opacity .2s, transform .2s; z-index: 50; box-shadow: 0 0 4px var(--accent-1), 0 0 9px var(--accent-1);
     pointer-events: none; white-space: nowrap;
   }
@@ -1423,7 +1431,7 @@ function renderRainColumns() {
   /* モックアップ(App_Live)の6列×94マスをそのまま埋め込み(タダスケ/ハヤサカの隠し文字もここに入っている)。
      [x, 速さ, ...[反転, br/md, 遅延秒, 文字, ダミー文字]] 。画面が縦に長い分は上に足す */
   const COLS = [[41,"B",[1,"md",4.084,"ｳ","6"],[1,"md",4.146,"ﾃ","ｼ"],[0,"br",4.243,"¥","K"],[1,"md",4.296,"ﾑ","ﾕ"],[0,"md",4.377,"8","S"],[1,"md",4.45,"!","ｳ"],[1,"md",4.545,"ｸ","W"],[1,"md",4.621,"3","ﾃ"],[0,"md",4.683,")","V"],[1,"br",4.771,"ｱ","ﾈ"],[0,"br",4.845,"0","ｿ"],[1,"br",4.899,"?","B"],[0,"md",4.985,"ｸ","ﾜ"],[1,"br",5.07,"6","ﾖ"],[1,"md",5.146,"7","9"],[0,"md",5.215,"ﾀ","5"],[0,"br",5.288,"2","ﾘ"],[1,"br",5.378,"6","I"],[1,"br",5.427,"+",")"],[1,"br",5.517,"+","8"],[0,"md",5.606,"9","ｶ"],[0,"br",5.67,"ﾕ","6"],[0,"md",5.754,"ﾋ","B"],[1,"br",5.805,"ﾔ","?"],[1,"br",5.89,"ｸ","ﾔ"],[1,"br",5.98,"ﾊ","3"],[1,"md",6.062,"*","H"],[1,"md",6.138,"ﾕ","ｽ"],[1,"md",6.205,"5","0"],[1,"br",6.272,"ﾛ","W"],[1,"br",6.344,"ｷ","ｷ"],[1,"br",6.399,"ﾍ","!"],[1,"br",6.476,"ﾗ","ﾏ"],[0,"md",6.559,"ｽ","ｲ"],[1,"br",6.651,"7","ﾑ"],[1,"br",6.725,"ﾖ","!"],[0,"br",6.81,"ﾒ","+"],[1,"br",6.874,"E","ｺ"],[1,"md",6.933,"N","T"],[0,"br",7.009,"¥","6"],[0,"br",7.085,"!","ﾘ"],[0,"br",7.167,"0","ﾏ"],[1,"md",7.232,"+","ｲ"],[1,"md",7.307,"9","ﾗ"],[0,"md",7.409,"ｷ","*"],[1,"br",7.453,"4","!"],[0,"br",7.56,"ﾏ","?"],[1,"md",7.61,"1","¥"],[0,"md",7.683,"2","ｵ"],[1,"md",7.767,"+","ｳ"],[0,"md",7.829,"ﾛ","+"],[0,"br",7.934,")","5"],[1,"md",7.98,"ｵ","ﾒ"],[1,"md",8.064,"1","ﾗ"],[0,"br",8.13,"ｵ","ｻ"],[1,"br",8.234,"ｿ","ｼ"],[1,"br",8.277,"ﾁ","ﾌ"],[0,"br",8.389,"5","6"],[1,"md",8.435,"M","ﾐ"],[1,"md",8.498,"ｼ","ﾝ"],[1,"br",8.575,"ｶ","ﾏ"],[0,"br",8.646,"ｾ","ﾛ"],[0,"md",8.728,"ﾜ","7"],[0,"md",8.839,"2","3"],[0,"br",8.898,"ﾌ","3"],[1,"br",8.978,"1",")"],[1,"br",9.025,"ｻ","N"],[1,"br",9.107,"H","ﾉ"],[1,"md",9.186,"ﾃ","7"],[0,"br",9.262,"¥","M"],[1,"md",9.364,"K","J"],[0,"md",9.416,"4","ｺ"],[1,"md",9.5,"H","ﾑ"],[1,"br",9.549,"1","ﾌ"],[0,"md",9.636,"C","ﾅ"],[0,"md",9.73,"ﾈ","("],[1,"br",9.782,"0","ﾊ"],[0,"br",9.883,"+","ﾊ"],[1,"md",9.939,"0","ｻ"],[0,"br",10.009,"!","9"],[1,"br",10.106,"ﾊ","ｱ"],[1,"md",10.175,"¥","ｼ"],[1,"md",10.245,"*","Y"],[1,"md",10.322,"1","E"],[0,"br",10.382,"ﾊ","ｻ"],[0,"br",10.488,"ﾙ","ｻ"],[0,"md",10.528,"ﾔ","ﾔ"],[0,"md",10.626,"ﾙ","ﾃ"],[1,"md",10.678,"0","2"],[0,"br",10.788,"ﾈ","2"],[0,"md",10.823,"ﾆ","A"],[0,"br",10.907,"ﾎ","ｻ"],[1,"br",11.008,"ｴ","J"],[1,"br",11.086,"ｽ","ｾ"]],[84,"B",[1,"md",3.947,"ﾖ","C"],[1,"md",3.992,"ﾃ","ｾ"],[1,"br",4.095,"5","ﾏ"],[0,"br",4.173,"ﾆ","6"],[1,"md",4.222,"ﾄ","ﾉ"],[0,"md",4.331,"ﾈ","G"],[0,"md",4.391,"3","ｷ"],[0,"br",4.452,"ｷ","ﾇ"],[0,"md",4.538,"ｽ","ｾ"],[0,"br",4.602,"+","ｺ"],[0,"md",4.695,"ｲ","ｷ"],[1,"br",4.774,"*","*"],[0,"md",4.817,"ﾇ","ﾀ"],[1,"md",4.922,"ｴ","L"],[1,"md",4.969,"Z","ﾚ"],[1,"md",5.07,"7","S"],[1,"br",5.152,"ｿ","ﾆ"],[0,"md",5.215,"ｻ","J"],[0,"br",5.272,"9","ｿ"],[0,"md",5.349,"ｸ","ﾕ"],[1,"br",5.452,"!","ﾋ"],[0,"br",5.5,"X","K"],[1,"md",5.604,"ｺ","ﾚ"],[0,"br",5.667,"8","W"],[1,"br",5.744,"3","ﾑ"],[1,"br",5.805,"E","ﾓ"],[0,"br",5.899,"N","ﾝ"],[0,"br",5.962,"K","ｷ"],[0,"br",6.031,"(","X"],[1,"md",6.106,"N","ｼ"],[0,"md",6.179,"V","ﾂ"],[1,"br",6.277,"X","ｱ"],[1,"md",6.326,"ﾙ","8"],[0,"br",6.414,"ﾉ","ﾉ"],[1,"br",6.475,"!","ﾇ"],[1,"br",6.544,"3","("],[0,"br",6.648,"ﾕ","ｲ"],[1,"br",6.707,"I","*"],[1,"md",6.774,"4","5"],[0,"br",6.857,"Y","7"],[1,"md",6.947,"S","Q"],[0,"md",7.022,"3","5"],[1,"md",7.078,"5","ｽ"],[0,"br",7.157,"ﾊ","¥"],[0,"md",7.25,"ｺ","ﾅ"],[0,"md",7.325,"!","F"],[1,"br",7.369,"0","1"],[1,"br",7.469,"M","ｷ"],[0,"md",7.541,"ﾏ","ﾏ"],[0,"md",7.587,"ﾃ",")"],[1,"md",7.702,"5","ﾑ"],[0,"br",7.766,"Y","ﾘ"],[1,"md",7.85,"ﾑ","0"],[0,"br",7.921,"O","ﾕ"],[0,"br",7.979,"7","ｶ"],[0,"br",8.045,"ｵ","8"],[1,"br",8.153,"K","2"],[1,"md",8.23,"9","1"],[0,"br",8.302,"1","ﾁ"],[0,"md",8.356,"*","ｶ"],[0,"md",8.412,"9","*"],[0,"br",8.514,"I","ﾆ"],[1,"md",8.589,"V","3"],[0,"md",8.643,"ﾗ","F"],[1,"md",8.746,"ｴ","+"],[0,"md",8.828,"(","!"],[1,"md",8.901,"ﾑ","ﾆ"],[0,"md",8.961,"E","!"],[1,"md",9.02,"ｴ","ﾖ"],[0,"br",9.101,"8","("],[1,"br",9.19,"ﾀ","+"],[0,"br",9.26,"ﾍ","ﾙ"],[1,"md",9.315,"ﾘ","ﾁ"],[1,"md",9.431,"8","ｵ"],[0,"md",9.48,"ﾄ","ﾔ"],[1,"md",9.56,"0","A"],[0,"br",9.628,"ｳ","?"],[0,"md",9.698,"ﾐ","ﾒ"],[0,"br",9.8,"ﾑ","!"],[1,"md",9.876,"ﾇ","1"],[0,"br",9.934,"ｽ","!"],[1,"md",9.992,"ﾀ","8"],[1,"md",10.068,"ﾜ","ｶ"],[0,"br",10.137,"8","8"],[1,"br",10.211,"ﾜ","ﾋ"],[1,"br",10.313,"(","("],[0,"br",10.395,"ｱ","ﾋ"],[0,"md",10.443,"R","8"],[1,"md",10.531,"ﾊ","ﾚ"],[0,"br",10.593,"7","ﾒ"],[1,"br",10.694,"ﾈ","ｶ"],[0,"br",10.77,"(","?"],[0,"br",10.84,"ﾇ","ｼ"],[0,"md",10.908,"ﾃ","3"]],[150,"A",[1,"md",0.361,"8","ｼ"],[0,"br",0.458,"K","ﾐ"],[1,"br",0.49,"!",")"],[0,"md",0.587,"¥","R"],[0,"md",0.675,"ﾇ","ﾌ"],[1,"br",0.739,"H","3"],[0,"br",0.805,"ﾉ","?"],[0,"br",0.867,"1","ﾋ"],[0,"md",0.951,"+","ﾀ"],[1,"md",1.045,"ﾊ","2"],[0,"md",1.097,"¥","ﾁ"],[1,"md",1.204,"ｵ","4"],[0,"md",1.265,"U","2"],[1,"md",1.319,"+","ｶ"],[0,"br",1.43,"ｾ","ｽ"],[1,"br",1.476,"W","ﾌ"],[0,"br",1.541,"4","ﾈ"],[1,"br",1.626,"*","6"],[0,"br",1.712,"?","ﾏ"],[1,"br",1.805,"ﾏ","ﾕ"],[0,"br",1.884,"ﾚ","3"],[0,"md",1.958,"ﾋ","*"],[1,"md",1.994,"K","ﾝ"],[0,"br",2.067,"ﾒ","ｼ"],[1,"md",2.145,"*","ｱ"],[0,"md",2.225,"V","ﾜ"],[1,"md",2.325,"6","ﾗ"],[1,"md",2.406,"ｻ","+"],[0,"br",2.449,"0","O"],[1,"br",2.557,"2","ｽ"],[1,"md",2.61,"¥","2"],[1,"md",2.672,"ｵ","ｿ"],[1,"br",2.74,"ﾔ","ｽ"],[1,"md",2.822,"ﾎ","J"],[1,"br",2.891,"U","8"],[0,"br",3.003,"ｱ","ﾀ"],[0,"md",3.053,"ﾔ","ﾁ"],[1,"md",3.153,"ﾆ","6"],[0,"br",3.191,"ﾗ","ｿ"],[1,"md",3.293,"ﾇ","6"],[1,"br",3.342,"ﾄ","ﾙ"],[1,"md",3.438,"ｶ","E"],[1,"br",3.494,"*","ｹ"],[1,"md",3.59,"ﾗ","ｲ"],[1,"br",3.646,"ｴ","ｳ"],[0,"md",3.747,"6","4"],[0,"br",3.822,"¥","ｺ"],[0,"br",3.871,"ﾀ","¥"],[1,"br",3.958,"ｹ","6"],[0,"md",4.016,"ﾇ","ﾈ"],[0,"br",4.094,"5","ﾃ"],[0,"br",4.194,"ﾗ","ｴ"],[0,"md",4.252,"4","ﾎ"],[1,"br",4.333,"ﾑ","V"],[0,"md",4.431,"ﾖ","S"],[1,"br",4.502,"R","!"],[0,"md",4.571,"ﾗ","("],[1,"br",4.658,"ｾ","1"],[1,"br",4.705,"ﾄ","D"],[1,"md",4.774,"ﾃ","ﾎ"],[1,"br",4.871,"W","ﾉ"],[1,"md",4.934,"1","ﾘ"],[0,"md",5.013,"ﾗ","ﾈ"],[0,"md",5.11,"3",")"],[1,"md",5.161,"ｿ","ﾕ"],[0,"br",5.231,"+","ﾘ"],[1,"md",5.307,"ｲ","ﾅ"],[1,"md",5.381,"ﾅ","ﾋ"],[1,"br",5.455,"P","ｿ"],[0,"br",5.526,"U","ﾇ"],[1,"br",5.598,"!","5"],[0,"br",5.668,"7","ﾏ"],[1,"md",5.76,"ﾜ","ﾉ"],[0,"md",5.834,"T","S"],[1,"md",5.902,"E","ﾗ"],[0,"br",5.996,"5",")"],[0,"md",6.084,"ﾅ","ﾓ"],[1,"md",6.14,"9","M"],[0,"md",6.233,"!","ﾍ"],[1,"br",6.303,"ﾚ","ｱ"],[1,"br",6.345,")","*"],[0,"br",6.445,"ﾙ","ﾓ"],[1,"br",6.525,"L","O"],[1,"md",6.604,"L","!"],[0,"md",6.663,"ﾄ","ｼ"],[1,"br",6.754,"¥","ﾜ"],[1,"br",6.8,"V","*"],[1,"br",6.903,"K","3"],[1,"br",6.944,"2","ﾘ"],[0,"md",7.032,"ｵ","F"],[0,"br",7.094,"ｴ","9"],[1,"br",7.175,"H","ﾊ"],[1,"md",7.274,"9","8"],[1,"br",7.355,"3","ｶ"]],[227,"C",[0,"md",3.64,"ﾓ","ｲ"],[1,"md",3.713,"ﾋ","ﾖ"],[1,"br",3.793,"1","8"],[1,"md",3.854,"9","ﾘ"],[1,"md",3.924,"(","2"],[0,"md",4.038,"(","¥"],[1,"br",4.114,"ｺ","ｽ"],[0,"br",4.164,"ﾉ","2"],[1,"md",4.246,"*","4"],[0,"br",4.333,"Z","5"],[0,"br",4.39,"ｼ","?"],[1,"md",4.45,"S","9"],[0,"md",4.566,"4","3"],[0,"md",4.6,"ﾒ","7"],[1,"md",4.681,"ﾅ","ｿ"],[1,"br",4.788,"ﾛ","4"],[1,"br",4.867,"ﾜ","R"],[1,"br",4.935,"6","ﾑ"],[0,"br",5.012,"!","ｱ"],[1,"md",5.063,"ﾉ","1"],[1,"md",5.125,"ﾆ","C"],[1,"br",5.204,"ﾁ","X"],[1,"md",5.287,"O","7"],[1,"br",5.391,"ﾖ","ﾛ"],[1,"br",5.437,"0","ﾃ"],[1,"br",5.529,"J","0"],[1,"md",5.585,"F","G"],[1,"br",5.669,"R","3"],[1,"br",5.729,"7","ﾂ"],[0,"br",5.821,")","ﾜ"],[0,"md",5.884,"3","0"],[0,"br",5.987,"4","ﾕ"],[0,"br",6.034,"7","B"],[1,"md",6.142,"ｸ","ｽ"],[0,"md",6.206,")","ﾖ"],[0,"br",6.267,"ﾃ","J"],[1,"br",6.338,"!","ﾙ"],[0,"md",6.435,"6","ﾗ"],[1,"md",6.482,"H","ﾏ"],[1,"br",6.558,"ﾄ","ｹ"],[0,"br",6.657,"!","¥"],[1,"md",6.705,"ﾋ","ﾛ"],[1,"md",6.788,"ｼ","2"],[1,"md",6.887,"5","ﾐ"],[0,"br",6.93,")","ﾓ"],[1,"br",7.038,"ｸ","ﾑ"],[1,"br",7.112,"ｴ","?"],[1,"md",7.16,"?","D"],[0,"md",7.254,"¥","0"],[0,"br",7.331,"2","ｺ"],[0,"br",7.414,"(","ｷ"],[1,"br",7.479,"!","G"],[1,"md",7.542,"4","ﾌ"],[0,"br",7.618,"4","+"],[0,"md",7.708,"ﾕ","ｲ"],[1,"md",7.764,"ｿ","ﾏ"],[1,"md",7.846,"6","ﾋ"],[1,"md",7.929,"ｸ","2"],[0,"md",8.012,"ﾚ","ﾍ"],[0,"md",8.063,"5","ﾝ"],[1,"md",8.136,"ﾋ","L"],[0,"br",8.239,"ｼ","("],[1,"md",8.302,"3","ｷ"],[0,"md",8.375,"3","ﾎ"],[0,"md",8.451,"I","8"],[0,"md",8.526,"4","7"],[0,"br",8.584,"7","ﾎ"],[0,"md",8.665,"ﾖ","2"],[0,"br",8.747,"ｺ","¥"],[0,"br",8.805,"0","F"],[1,"md",8.889,"ｻ","ﾀ"],[1,"md",8.971,"R","9"],[0,"md",9.027,"!","("],[1,"md",9.117,"Z","ﾍ"],[0,"md",9.194,"(","ﾚ"],[1,"br",9.276,"!","1"],[0,"md",9.362,"ﾛ","ｽ"],[1,"br",9.406,"!","Z"],[0,"md",9.48,"ｼ","4"],[1,"br",9.579,"4","P"],[0,"md",9.667,"ｺ","ﾛ"],[0,"md",9.739,"A",")"],[1,"md",9.775,"I","0"],[0,"br",9.883,"ﾄ","ﾘ"],[0,"md",9.949,"?","ｺ"],[0,"md",10.015,"ﾉ","ｴ"],[0,"br",10.099,"ﾇ","ﾓ"],[0,"br",10.186,"U","ﾓ"],[1,"md",10.24,"1","¥"],[1,"md",10.328,"ﾌ","!"],[1,"md",10.384,"ﾎ","ｶ"],[0,"md",10.482,"+","ﾜ"],[0,"md",10.565,"ｼ","ﾜ"],[1,"br",10.62,"J","ﾁ"]],[233,"C",[0,"md",2.898,"ﾈ","ﾀ"],[0,"md",2.97,"(","1"],[1,"br",3.035,"ｾ","3"],[1,"md",3.103,"ｼ","6"],[0,"br",3.171,"2","*"],[0,"md",3.271,"ﾄ","ﾙ"],[0,"br",3.339,"ﾖ","ﾇ"],[1,"md",3.431,"P","ｹ"],[1,"md",3.51,"ﾑ","N"],[1,"br",3.586,"ｾ","*"],[1,"md",3.641,"ﾔ","ﾇ"],[1,"md",3.694,"ﾆ","C"],[1,"br",3.812,"ｱ","ｿ"],[0,"br",3.863,"ｼ","ﾈ"],[0,"br",3.948,"1","1"],[1,"br",4.029,"8","ﾜ"],[0,"md",4.081,"7","8"],[1,"br",4.144,"ﾂ","ﾎ"],[0,"md",4.24,"D","ｴ"],[0,"md",4.314,"ﾋ","ﾍ"],[0,"md",4.393,"0","Q"],[0,"md",4.465,"T","ﾌ"],[1,"br",4.564,"ﾄ","ﾕ"],[0,"br",4.632,"ﾋ","ﾉ"],[0,"br",4.707,"ｿ","ﾂ"],[0,"br",4.776,"ﾜ","ﾚ"],[1,"br",4.822,"0","ﾓ"],[1,"br",4.933,"5","!"],[0,"br",5.013,"ﾜ","5"],[0,"md",5.083,"!","*"],[0,"md",5.145,"ﾎ","ｹ"],[1,"md",5.209,"8","W"],[1,"md",5.28,"ﾔ","I"],[1,"br",5.372,"ｴ","¥"],[1,"br",5.455,"ﾄ","7"],[0,"br",5.497,"!","?"],[0,"md",5.58,"ｿ","ｶ"],[1,"md",5.657,"S","3"],[1,"br",5.755,"ﾓ","5"],[1,"br",5.815,"ﾁ","ﾅ"],[1,"md",5.89,"8","ﾒ"],[1,"md",5.951,"0","U"],[0,"md",6.047,"ﾑ","6"],[0,"md",6.121,"ﾙ","4"],[1,"md",6.185,"ｹ","5"],[0,"br",6.249,"ﾕ","ﾉ"],[0,"br",6.35,"0","1"],[0,"br",6.398,"ﾚ","ﾄ"],[0,"br",6.508,"ｾ","4"],[1,"md",6.566,")","ﾎ"],[0,"md",6.631,"(","ﾑ"],[1,"br",6.736,"G","8"],[0,"md",6.771,"1","ｴ"],[1,"br",6.853,"ｳ","2"],[0,"br",6.952,"ｼ","ﾙ"],[1,"br",7.017,"ﾏ","6"],[0,"br",7.1,"ﾁ","G"],[0,"br",7.165,"ﾜ","ﾔ"],[0,"br",7.224,"ﾇ","ﾛ"],[0,"br",7.338,"7","ｹ"],[0,"md",7.374,"U","ﾛ"],[1,"br",7.478,"+","K"],[1,"md",7.559,"ﾔ","0"],[1,"br",7.618,"!","ﾜ"],[1,"br",7.687,"2","ﾄ"],[0,"md",7.758,"9","ｹ"],[0,"md",7.822,"ｳ","ﾇ"],[0,"md",7.93,"6","ﾂ"],[1,"br",8.01,"ｿ","ﾚ"],[0,"md",8.049,"4","ﾐ"],[0,"br",8.145,"?","ｽ"],[0,"md",8.217,"9",")"],[0,"br",8.292,"1","3"],[1,"br",8.369,"ﾜ","ﾘ"],[1,"md",8.463,"ﾏ","+"],[0,"md",8.498,"ﾖ","ｵ"],[1,"br",8.586,"Z","K"],[1,"br",8.678,"ﾂ","ﾊ"],[1,"br",8.744,"1","¥"],[1,"br",8.8,"7","ｴ"],[1,"br",8.885,"5","ﾕ"],[0,"br",8.986,"ｴ","ﾀ"],[0,"md",9.063,"ﾓ","ﾍ"],[0,"br",9.136,"ﾕ",")"],[0,"md",9.18,"ﾙ","5"],[0,"br",9.272,"ﾘ","ｴ"],[1,"md",9.325,"ﾖ","K"],[1,"md",9.422,"ｽ","("],[1,"br",9.491,"ﾔ","("],[0,"md",9.574,"ｷ","ﾑ"],[0,"md",9.636,"I","Y"],[0,"md",9.711,"4","2"],[1,"br",9.785,"ｺ","ﾅ"],[0,"md",9.849,"ﾛ","T"]],[374,"A",[0,"md",1.715,"(","ｴ"],[1,"br",1.78,"*","ﾗ"],[0,"br",1.85,"ﾋ","ﾎ"],[0,"md",1.919,"ｸ","Q"],[0,"br",1.999,"+","("],[1,"md",2.077,"ｿ","7"],[1,"md",2.186,"P","ﾄ"],[1,"md",2.254,"ﾐ","ﾘ"],[0,"md",2.296,"4",")"],[1,"br",2.41,"?","¥"],[0,"md",2.454,"ﾌ","ｴ"],[0,"md",2.544,"ﾍ","ﾋ"],[1,"br",2.612,"N","ﾁ"],[0,"md",2.697,"ｻ","4"],[0,"br",2.755,"ｴ","7"],[0,"md",2.859,"ﾏ","ﾌ"],[0,"br",2.905,"ｽ","¥"],[1,"br",2.974,")","!"],[1,"br",3.066,"ﾍ","("],[1,"br",3.122,"4","3"],[0,"md",3.237,"ﾋ","ﾁ"],[1,"br",3.302,"ｲ","ﾄ"],[1,"md",3.347,"(","G"],[0,"md",3.428,"Y","F"],[0,"md",3.497,"+","ｷ"],[0,"md",3.592,"ﾏ","ｲ"],[1,"md",3.676,"R","*"],[1,"md",3.752,"ﾔ","ﾑ"],[1,"br",3.822,"ﾐ","?"],[0,"br",3.882,"ﾏ","!"],[1,"br",3.98,"9","!"],[1,"br",4.022,"ﾓ","ﾘ"],[0,"br",4.112,"9","T"],[0,"md",4.209,"ｲ",")"],[0,"br",4.274,"ｻ","ﾆ"],[0,"md",4.337,"+","ｼ"],[1,"md",4.402,"ﾕ","ﾇ"],[1,"br",4.501,"ｻ","C"],[1,"md",4.564,"T","!"],[0,"md",4.638,"8","ﾐ"],[1,"br",4.724,"L",")"],[1,"br",4.801,"ｾ","ｴ"],[0,"md",4.843,"+","1"],[0,"md",4.932,"ﾘ","ﾄ"],[0,"br",5.004,"ﾌ","A"],[0,"br",5.102,"ﾑ","ｴ"],[1,"br",5.145,"ｹ","ﾄ"],[1,"md",5.256,"X","*"],[1,"br",5.292,"ｲ","ｾ"],[0,"md",5.376,"7","ｻ"],[0,"br",5.463,"ｿ","5"],[1,"md",5.526,"ﾉ","ﾉ"],[0,"md",5.61,"ﾊ","2"],[0,"md",5.67,"C","ｽ"],[0,"br",5.775,"2","ﾃ"],[1,"md",5.849,"!","ﾄ"],[1,"br",5.907,"C","7"],[0,"md",5.992,"ﾐ","ﾙ"],[1,"br",6.042,"T","ﾃ"],[0,"br",6.13,"T","ﾙ"],[0,"md",6.194,"Y","?"],[1,"br",6.301,"ﾁ","ﾎ"],[1,"md",6.357,"ﾓ","ｳ"],[0,"md",6.422,"ﾜ","ﾄ"],[0,"md",6.526,"ﾎ","ﾀ"],[0,"br",6.572,")",")"],[0,"br",6.671,"ｹ","+"],[0,"br",6.747,"E","ｸ"],[0,"md",6.808,"ｹ","("],[0,"br",6.904,"ｶ","("],[0,"br",6.965,"1","C"],[0,"br",7.057,"X","("],[1,"br",7.1,"ﾚ","*"],[1,"br",7.174,"Z","ｱ"],[1,"br",7.256,"1","1"],[0,"md",7.348,"7","ｹ"],[1,"md",7.431,"ｵ","ﾉ"],[1,"md",7.51,"B","?"],[0,"md",7.561,"ﾀ","3"],[0,"br",7.62,"ﾀ","ｳ"],[0,"md",7.727,"ﾞ","ﾑ"],[1,"br",7.795,"ｽ","Z"],[0,"br",7.846,"ｹ","ﾍ"],[0,"md",7.95,"ﾊ","ｼ"],[1,"md",8.009,"ﾔ","*"],[0,"md",8.068,"ｻ","8"],[0,"br",8.183,"ｶ","9"],[1,"br",8.218,"ﾔ","ｸ"],[1,"br",8.333,"ｼ","ﾂ"],[1,"br",8.369,"ﾋ","ﾑ"],[0,"md",8.452,"R","ｿ"],[1,"md",8.539,"K","ﾇ"],[0,"md",8.604,"W","A"],[1,"md",8.686,"ｴ","ﾒ"]]];
-  const SCALE = 0.62; // 実機ではモックアップの見た目より文字が大きく見えるため細かくする
+  const SCALE = 1; // モックアップと同じ実寸(10px文字・9pxマス)
   const CH = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789:.=*+-<>¥?!)(";
   const rnd = () => CH[Math.floor(Math.random() * CH.length)];
   const vw = Math.min(window.innerWidth, 480);
@@ -1903,11 +1911,12 @@ function openSiteSheet(siteId) {
         <button type="button" class="back-btn" id="cancelSiteBtn" aria-label="閉じる">${ICONS.chevBack}</button>
         <h3>${siteId ? "EDIT ACCOUNT" : "NEW ACCOUNT"}</h3>
       </div>
+      ${folderFieldHtml}
       <div class="sfield">
         <label>ACCOUNT NAME</label>
         <input type="text" id="siteNameInput" value="${escapeHtml(name)}" placeholder="例）Amazon" />
       </div>
-      ${folderFieldHtml}
+      <div class="sfield" style="margin-bottom:8px;"><label style="margin-bottom:0;">FIELDS</label></div>
       <div id="fieldsContainer"></div>
       <button class="add-field-btn" id="addFieldBtn">+ ADD FIELD</button>
       <div class="sfield">
@@ -1936,11 +1945,11 @@ function renderFieldsEditor() {
   container.innerHTML = editingFields.map((f, i) => `
     <div class="field-block" data-idx="${i}">
       <div class="field-block-top">
-        <input type="text" class="fLabelInput" placeholder="ラベル(例: ID、パスワード)" value="${escapeHtml(f.label)}" />
+        <input type="text" class="fLabelInput" placeholder="ID" value="${escapeHtml(f.label)}" />
         <input type="text" class="fValueInput" value="${escapeHtml(f.value)}" />
       </div>
       <div class="field-block-actions">
-        <button class="remove-field-btn" data-remove="${i}">削除</button>
+        <button class="remove-field-btn" data-remove="${i}" aria-label="削除">×</button>
       </div>
     </div>
   `).join("");
@@ -2215,16 +2224,23 @@ function openSearchSheet() {
   const renderResults = (query) => {
     const box = document.getElementById("searchResultsBox");
     if (!box) return;
-    const q = normalizeForSearch(query.trim());
+    const raw = query.trim();
+    const q = normalizeForSearch(raw);
     const sites = q ? state.vault.sites.filter((s) => normalizeForSearch(s.name).includes(q)) : state.vault.sites;
-    box.innerHTML = sites.length
+    const hl = (name) => {
+      const i = q ? normalizeForSearch(name).indexOf(q) : -1;
+      if (i < 0 || normalizeForSearch(name).length !== name.length) return escapeHtml(name);
+      return escapeHtml(name.slice(0, i)) + "<b>" + escapeHtml(name.slice(i, i + q.length)) + "</b>" + escapeHtml(name.slice(i + q.length));
+    };
+    const folderName = (s) => { const f = state.vault.folders.find((x) => x.id === s.folderId); return f ? f.name : ""; };
+    box.innerHTML = `<div class="search-label">RESULTS (${sites.length})</div>` + (sites.length
       ? sites.map((s) => `
-        <div class="site-card" data-search-result="${s.id}" data-folder-id="${s.folderId || ""}">
-          <div class="site-head">
-            <div class="site-name-wrap"><div class="site-name">${escapeHtml(s.name)}</div></div>
-          </div>
+        <div class="search-card" data-search-result="${s.id}" data-folder-id="${s.folderId || ""}">
+          ${cvCorners("#00FF41")}
+          <div class="badge-ring">${ICONS.keyGeneric}</div>
+          <div style="flex:1;min-width:0;"><div class="sname">${hl(s.name)}</div><div class="ssub">${escapeHtml(folderName(s))}</div></div>
         </div>`).join("")
-      : `<div class="empty-state">一致するアカウントがありません</div>`;
+      : `<div class="empty-state">一致するアカウントがありません</div>`);
     box.querySelectorAll("[data-search-result]").forEach((el) => {
       el.addEventListener("click", () => {
         const id = el.getAttribute("data-search-result");
@@ -2243,12 +2259,9 @@ function openSearchSheet() {
   };
   overlay.innerHTML = `
     <div class="sheet">
-      <div class="sheet-head2">
-        <button type="button" class="back-btn" id="closeSearchBtn" aria-label="閉じる">${ICONS.chevBack}</button>
-        <h3>SEARCH</h3>
-      </div>
-      <div class="sfield">
-        <input type="text" id="searchSheetInput" placeholder="アカウント名で検索" autocomplete="off" />
+      <div class="search-head">
+        <button type="button" class="back-btn" id="closeSearchBtn" aria-label="戻る" style="background:none;border:none;padding:0;display:flex;color:var(--accent-2);">${ICONS.chevBack}</button>
+        <div class="search-box">${ICONS.search}<input type="text" id="searchSheetInput" placeholder="SEARCH" autocomplete="off" /></div>
       </div>
       <div id="searchResultsBox"></div>
     </div>`;
@@ -2506,11 +2519,13 @@ function getOverlay() {
 }
 function showOverlay() {
   const overlay = getOverlay();
+  document.body.classList.add("sub-open");
   requestAnimationFrame(() => overlay.classList.add("show"));
 }
 function closeOverlay() {
   const overlay = document.getElementById("overlay");
   if (overlay) overlay.classList.remove("show");
+  document.body.classList.remove("sub-open");
 }
 
 /* ========================= ルート描画 ========================= */
