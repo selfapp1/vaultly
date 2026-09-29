@@ -357,7 +357,7 @@
   .overlay.show { opacity: 1; pointer-events: auto; }
   .sheet {
     width: 100%; height: 100%; overflow-y: auto; background: transparent; border: none; box-shadow: none; border-radius: 0;
-    padding: 0 24px calc(24px + var(--safe-bottom)); --cv-c: var(--accent-2);
+    padding: var(--safe-top) 24px calc(24px + var(--safe-bottom)); --cv-c: var(--accent-2);
   }
   .overlay.show .sheet { animation: screenEnter 0.5s cubic-bezier(.16,1,.3,1) both; }
   @keyframes screenEnter { 0% { opacity: 0; transform: translateY(14px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
@@ -1436,7 +1436,7 @@ function renderRainColumns() {
   const rnd = () => CH[Math.floor(Math.random() * CH.length)];
   const vw = Math.min(window.innerWidth, 480);
   const need = Math.ceil(window.innerHeight / (9 * SCALE)) + 2;
-  return COLS.map((col) => {
+  const lit = COLS.map((col) => {
     const x = Math.round(col[0] * vw / 390), p = col[1], cells = col.slice(2);
     const extra = Math.max(0, need - cells.length);
     let t = 0, html = "";
@@ -1452,7 +1452,21 @@ function renderRainColumns() {
       html += `<div class="gcell"${flip}><span class="gc1 pp${p}_${c[1]}" style="animation-delay:${d}s;">${c[3]}</span><span class="gc2 pp${p}" style="animation-delay:${d}s;">${c[4]}</span></div>`;
     });
     return `<div class="rcol2" style="left:${x}px;height:${(extra + cells.length) * 9}px;">${html}</div>`;
-  }).join("");
+  });
+  // モックの6列に加えて、同じ動きの列を6本足して倍の密度にする(位置・速さ・タイミングはバラバラ)
+  const extraSpecs = [[15, "C", 2.6], [108, "A", 3.4], [185, "B", 1.1], [270, "A", 4.3], [300, "B", 0.6], [345, "C", 3.0]];
+  const extra = extraSpecs.map(([bx, p, off]) => {
+    const x = Math.round(bx * vw / 390);
+    let t = off, html = "";
+    for (let i = 0; i < need; i++) {
+      const br = Math.random() < 0.5 ? "br" : "md";
+      const flip = Math.random() < 0.5 ? ' style="transform:scaleX(-1);"' : "";
+      html += `<div class="gcell"${flip}><span class="gc1 pp${p}_${br}" style="animation-delay:${t.toFixed(3)}s;">${rnd()}</span><span class="gc2 pp${p}" style="animation-delay:${t.toFixed(3)}s;">${rnd()}</span></div>`;
+      t += 0.03 + Math.random() * 0.08;
+    }
+    return `<div class="rcol2" style="left:${x}px;height:${need * 9}px;">${html}</div>`;
+  });
+  return lit.concat(extra).join("");
 }
 
 /* コーナーブラケット装飾(4隅の小さいL字)。承認済みモックアップの実寸(7px/1.4px/3px)をそのままトレース */
@@ -1490,6 +1504,11 @@ function confirmSheet({ title, html, confirmLabel, danger }) {
   });
 }
 
+/* 実在するフォルダの中に開いているものがあるか(消えたフォルダの古い記録は数えない) */
+function anyFolderOpen() {
+  return state.vault.folders.some((f) => state.openFolderIds.has(f.id));
+}
+
 function renderFolderCard({ folder, sites }) {
   const isOpen = state.openFolderIds.has(folder.id);
   const iconKey = folder.icon && ICONS[folder.icon] ? folder.icon : "folder";
@@ -1497,7 +1516,7 @@ function renderFolderCard({ folder, sites }) {
   const innerHtml = sites.length
     ? sites.map(renderSiteCard).join("")
     : `<div class="empty-state" style="padding:16px 0;">このフォルダは空です</div>`;
-  const dimmed = state.openFolderIds.size > 0 && !isOpen;
+  const dimmed = anyFolderOpen() && !isOpen;
   const cv = isOpen ? "#00FF41" : "var(--accent-2)";
   const folderCardHtml = `
     <div class="folder-card ${isOpen ? "open" : ""}" data-folder="${folder.id}" style="--card-dim:${dimmed ? 0.7 : 1}; --card-scale:${dimmed ? 0.98 : 1};">
@@ -1602,11 +1621,11 @@ function bindMain() {
 
 /* 開閉・暗くする効果を、要素を作り直さずにクラスの付け替えだけで反映する */
 function applyOpenState() {
-  const anyFolderOpen = state.openFolderIds.size > 0;
+  const anyOpen = anyFolderOpen();
   document.querySelectorAll(".folder-card[data-folder]").forEach((el) => {
     const open = state.openFolderIds.has(el.getAttribute("data-folder"));
     el.classList.toggle("open", open);
-    const dim = anyFolderOpen && !open;
+    const dim = anyOpen && !open;
     el.style.setProperty("--card-dim", dim ? 0.7 : 1);
     el.style.setProperty("--card-scale", dim ? 0.98 : 1);
   });
