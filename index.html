@@ -72,7 +72,7 @@
 
   .btn {
     appearance: none; cursor: pointer;
-    padding: 13px; border-radius: 0; font-size: 13px; font-weight: 400; letter-spacing: 0.02em;
+    padding: 13px; border-radius: 0; font-size: 15px; font-weight: 400; letter-spacing: 0.02em;
     width: 100%; max-width: 340px; color: var(--accent-1);
     background: var(--surface); border: 1px solid var(--accent-1);
   }
@@ -88,7 +88,7 @@
   .warn-box {
     position: relative; max-width: 340px; text-align: left; background: var(--surface);
     border: 1px solid rgba(255,90,90,0.4); border-radius: 0; padding: 16px;
-    font-size: 11.5px; color: var(--danger); line-height: 1.8; margin-bottom: 22px;
+    font-size: 13.5px; color: var(--danger); line-height: 1.8; margin-bottom: 22px;
     text-shadow: 0 0 4px currentColor, 0 0 9px currentColor;
     display: flex; gap: 11px; align-items: flex-start;
     --cv-c: var(--danger);
@@ -107,10 +107,10 @@
   }
   .sheet-head2 .back-btn svg { width: 18px; height: 18px; }
   .sheet-head2 h3 {
-    font-size: 19px; font-weight: 400; letter-spacing: 0.03em; color: var(--text); margin: 0; flex: 1;
+    font-size: 21px; font-weight: 400; letter-spacing: 0.03em; color: var(--text); margin: 0; flex: 1;
   }
   .settings-group-label {
-    font-size: 9px; color: rgba(0,143,17,0.7); letter-spacing: 0.1em; text-transform: uppercase;
+    font-size: 12px; color: rgba(0,143,17,0.7); letter-spacing: 0.1em; text-transform: uppercase;
     margin: 20px 0 6px;
   }
   .settings-group-label:first-child { margin-top: 0; }
@@ -121,7 +121,7 @@
   .settings-group.danger { border-color: rgba(255,90,90,0.35); box-shadow: 0 0 4px rgba(255,90,90,0.35), 0 0 9px rgba(255,90,90,0.35); --cv-c: var(--danger); margin-top: 20px; }
   .settings-row {
     display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: none; border: none;
-    padding: 13px 4px; color: var(--text); font-size: 12px; cursor: pointer;
+    padding: 13px 4px; color: var(--text); font-size: 14.5px; cursor: pointer;
   }
   .settings-row + .settings-row { border-top: 1px solid rgba(231,247,236,0.08); }
   .settings-row .si-icon { display: flex; flex-shrink: 0; color: var(--accent-2); }
@@ -129,21 +129,107 @@
   .settings-row .si-chev svg { width: 12px; height: 12px; }
   .settings-row .si-chev { display: flex; flex-shrink: 0; color: var(--accent-2); }
   .settings-row.danger, .settings-row.danger .si-icon, .settings-row.danger .si-chev { color: var(--danger); }
-  .settings-note { font-size: 10px; color: rgba(231,247,236,0.35); line-height: 1.8; margin: 18px 0 0; }
+  .settings-note { font-size: 12px; color: rgba(231,247,236,0.35); line-height: 1.8; margin: 18px 0 0; }
 
   /* ---- Main screen ---- */
-  .rain-wrap { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--bg); }
-  .rain-wrap .rain-col {
-    position: absolute; top: -40%; font-size: 13px; line-height: 1.05; color: var(--accent-2); white-space: pre;
-    text-shadow: 0 0 4px currentColor, 0 0 9px currentColor; -webkit-text-stroke: 0.35px currentColor;
-    animation: rainFall linear infinite; animation-play-state: paused;
-    opacity: 0; transition: opacity .4s ease;
+  .rain-wrap { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; background: var(--bg); opacity: 0; transition: opacity .6s ease; }
+  .rain-wrap *{animation-play-state:paused !important;}
+  .rain-wrap.active{opacity:1;}
+  .rain-wrap.active *{animation-play-state:running !important;}
+  .rain-wrap.flash{opacity:1;}
+  .rain-wrap.flash *{animation-play-state:running !important; animation-iteration-count:1 !important;}
+  .rain-wrap.resetting *{animation-name:none !important; animation-play-state:paused !important;}
+  .rain-shade{position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.2) 30%, rgba(0,0,0,0.6) 100%);}
+  .rcol2{position:absolute; top:0; width:14px; height:844px; overflow:hidden; display:flex; flex-direction:column;}
+  .gcell{position:relative; height:9px; line-height:9px; text-align:center; font-family:'Share Tech Mono',monospace; font-size:10px; -webkit-text-stroke:0.35px currentColor;}
+  .gc1,.gc2{position:absolute; inset:0; opacity:0; animation-iteration-count:infinite;}
+  @keyframes grow_pA_br{
+  0%{opacity:1;color:#EAEAE6;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:linear;}
+  3.846%{opacity:1;color:#EAEAE6;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:linear;}
+  5.769%{opacity:1;color:#00FF41;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  53.846%{opacity:1;color:#00FF41;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  72.308%{opacity:0.6;color:#003B00;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  84.615%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:steps(1,end);}
+  84.665%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;}
+  100%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;}
   }
-  .rain-wrap .rain-col .rain-head { color: #fff; text-shadow: 0 0 5px #fff, 0 0 11px #fff; -webkit-text-stroke: 0.35px #fff; }
-  .rain-wrap.active .rain-col, .rain-wrap.flash .rain-col { opacity: 0.9; animation-play-state: running; }
-  .rain-wrap.flash .rain-col { animation-iteration-count: 1; animation-fill-mode: forwards; }
-  .rain-wrap.resetting .rain-col { animation-name: none !important; opacity: 0 !important; animation-play-state: paused; }
-  @keyframes rainFall { from { transform: translateY(0); } to { transform: translateY(180%); } }
+  @keyframes grow_pA_md{
+  0%{opacity:1;color:#EAEAE6;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:linear;}
+  3.846%{opacity:1;color:#EAEAE6;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:linear;}
+  5.769%{opacity:1;color:#008F11;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  53.846%{opacity:1;color:#008F11;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  72.308%{opacity:0.6;color:#003B00;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  84.615%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:steps(1,end);}
+  84.665%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;}
+  100%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;}
+  }
+  @keyframes grow_pA_decoy{
+  0%{opacity:0;animation-timing-function:steps(1,end);}
+  100%{opacity:0;}
+  }
+  .gc1.ppA_br{animation-name:grow_pA_br;animation-duration:3.900s;}
+  .gc1.ppA_md{animation-name:grow_pA_md;animation-duration:3.900s;}
+  .gc2.ppA{animation-name:grow_pA_decoy;animation-duration:3.900s;}
+  @keyframes grow_pB_br{
+  0%{opacity:1;color:#EAEAE6;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:linear;}
+  3.125%{opacity:1;color:#EAEAE6;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:linear;}
+  4.688%{opacity:1;color:#00FF41;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  43.75%{opacity:1;color:#00FF41;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  58.75%{opacity:0.6;color:#003B00;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  68.75%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:steps(1,end);}
+  68.8%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;}
+  100%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;}
+  }
+  @keyframes grow_pB_md{
+  0%{opacity:1;color:#EAEAE6;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:linear;}
+  3.125%{opacity:1;color:#EAEAE6;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:linear;}
+  4.688%{opacity:1;color:#008F11;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  43.75%{opacity:1;color:#008F11;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  58.75%{opacity:0.6;color:#003B00;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  68.75%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:steps(1,end);}
+  68.8%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;}
+  100%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;}
+  }
+  @keyframes grow_pB_decoy{
+  0%{opacity:0;animation-timing-function:steps(1,end);}
+  100%{opacity:0;}
+  }
+  .gc1.ppB_br{animation-name:grow_pB_br;animation-duration:4.800s;}
+  .gc1.ppB_md{animation-name:grow_pB_md;animation-duration:4.800s;}
+  .gc2.ppB{animation-name:grow_pB_decoy;animation-duration:4.800s;}
+  @keyframes grow_pC_br{
+  0%{opacity:1;color:#EAEAE6;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:linear;}
+  2.532%{opacity:1;color:#EAEAE6;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:linear;}
+  3.797%{opacity:1;color:#00FF41;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  35.443%{opacity:1;color:#00FF41;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  47.595%{opacity:0.6;color:#003B00;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  55.696%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:steps(1,end);}
+  55.746%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;}
+  100%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;}
+  }
+  @keyframes grow_pC_md{
+  0%{opacity:1;color:#EAEAE6;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:linear;}
+  2.532%{opacity:1;color:#EAEAE6;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:linear;}
+  3.797%{opacity:1;color:#008F11;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  35.443%{opacity:1;color:#008F11;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  47.595%{opacity:0.6;color:#003B00;text-shadow:0 0 4px currentColor, 0 0 9px currentColor;animation-timing-function:linear;}
+  55.696%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;animation-timing-function:steps(1,end);}
+  55.746%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;}
+  100%{opacity:0;color:#0D0208;text-shadow:0 0 0px currentColor, 0 0 0px currentColor;}
+  }
+  @keyframes grow_pC_decoy{
+  0%{opacity:0;animation-timing-function:steps(1,end);}
+  100%{opacity:0;}
+  }
+  .gc1.ppC_br{animation-name:grow_pC_br;animation-duration:5.925s;}
+  .gc1.ppC_md{animation-name:grow_pC_md;animation-duration:5.925s;}
+  .gc2.ppC{animation-name:grow_pC_decoy;animation-duration:5.925s;}
+  @media (prefers-reduced-motion: reduce) {
+    .dscr{ display:none; }
+    .dfin{ opacity:1 !important; animation:none !important; text-shadow:none !important; }
+    .gc1{ opacity:1 !important; animation:none !important; color:#008F11 !important; }
+    .gc2{ display:none !important; }
+  }
   header.top {
     position: sticky; top: 0; z-index: 5;
     padding: 22px 24px 0;
@@ -151,19 +237,19 @@
     display: flex; align-items: center; justify-content: space-between;
   }
   header.top h2 {
-    font-size: 30px; margin: 0; font-weight: 400; letter-spacing: 0.04em; line-height: 1;
+    font-size: 34px; margin: 0; font-weight: 400; letter-spacing: 0.04em; line-height: 1;
     color: var(--text);
   }
-  .header-icons { display: flex; align-items: center; gap: 14px; }
+  .header-icons { display: flex; align-items: center; gap: 17px; }
   .icon-btn {
     background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: center;
     color: var(--accent-2); cursor: pointer; transition: transform .12s ease, filter .12s ease;
   }
   .icon-btn:active { transform: scale(0.9); filter: brightness(1.4); }
-  .icon-btn svg { width: 16px; height: 16px; }
+  .icon-btn svg { width: 21px; height: 21px; }
   .header-subtitle {
     padding: 6px 24px 0; position: relative; z-index: 1;
-    font-size: 10px; color: rgba(0,143,17,0.75); letter-spacing: 0.08em;
+    font-size: 12px; color: rgba(0,143,17,0.75); letter-spacing: 0.08em;
   }
   main.content { padding: 20px 20px 16px; position: relative; z-index: 1; flex: 1; }
   .empty-state { text-align: center; color: var(--text-dim); padding: 60px 20px; font-size: 14px; line-height: 1.8; }
@@ -172,7 +258,7 @@
     position: relative; background: var(--surface); border: 1px solid var(--cv-c, rgba(0,143,17,0.5));
     box-shadow: 0 0 4px var(--cv-c, rgba(0,143,17,0.5)), 0 0 9px var(--cv-c, rgba(0,143,17,0.5));
     margin-bottom: 11px; overflow: hidden; opacity: var(--card-dim, 1); transform: scale(var(--card-scale, 1));
-    transition: opacity .4s ease, transform .4s ease, border-color .4s ease;
+    transition: opacity .4s ease, transform .4s ease, border-color .4s ease, box-shadow .4s ease;
   }
   .site-head { display: flex; align-items: center; gap: 13px; padding: 15px 17px; cursor: pointer; }
   .badge-ring {
@@ -186,29 +272,34 @@
   .folder-head .badge-ring { width: 36px; height: 36px; }
   .folder-head .badge-ring svg { width: 17px; height: 17px; }
   .site-name-wrap { flex: 1; min-width: 0; }
-  .site-name { font-weight: 400; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .site-sub { font-size: 9px; color: rgba(231,247,236,0.4); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .site-name { font-weight: 400; font-size: 16.5px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .site-sub { font-size: 12px; color: rgba(231,247,236,0.4); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .chevron-icon { color: var(--cv-c, var(--accent-2)); transition: transform .4s cubic-bezier(.16,1,.3,1); flex-shrink: 0; }
   .chevron-icon svg { width: 13px; height: 13px; display: block; }
   .site-card.open .chevron-icon { transform: rotate(180deg); }
 
-  .site-body { display: none; padding: 0 17px 15px; }
-  .site-card.open .site-body { display: block; }
+  .site-body { display: grid; grid-template-rows: 0fr; padding: 0 17px; transition: grid-template-rows .45s cubic-bezier(.16,1,.3,1); }
+  .site-card.open .site-body { grid-template-rows: 1fr; }
+  .sb-inner { overflow: hidden; min-height: 0; opacity: 0; transform: translateY(-4px); transition: opacity .35s ease .05s, transform .35s ease .05s; }
+  .site-card.open .sb-inner { opacity: 1; transform: translateY(0); }
+  .sb-pad { padding-bottom: 15px; }
   .site-card.open { --cv-c: #00FF41; }
 
   .folder-card {
     position: relative; background: var(--surface); border: 1px solid var(--cv-c, rgba(0,143,17,0.5));
     box-shadow: 0 0 4px var(--cv-c, rgba(0,143,17,0.5)), 0 0 9px var(--cv-c, rgba(0,143,17,0.5));
     margin-bottom: 11px; overflow: hidden; opacity: var(--card-dim, 1); transform: scale(var(--card-scale, 1));
-    transition: opacity .4s ease, transform .4s ease, border-color .4s ease;
+    transition: opacity .4s ease, transform .4s ease, border-color .4s ease, box-shadow .4s ease;
   }
   .folder-head { display: flex; align-items: center; gap: 13px; padding: 15px 17px; cursor: pointer; }
   .folder-name-wrap { flex: 1; min-width: 0; }
-  .folder-name { font-weight: 400; font-size: 23px; color: var(--text); letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .folder-name { font-weight: 400; font-size: 26px; color: var(--text); letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .folder-card .chevron-icon svg { width: 14px; height: 14px; }
-  .folder-card.open .chevron-icon { transform: rotate(180deg); }
-  .folder-body { display: none; padding: 0 17px 15px 17px; padding-top: 2px; }
-  .folder-card.open .folder-body { display: block; }
+  .folder-card.open > .folder-head .chevron-icon { transform: rotate(180deg); }
+  .folder-body { display: grid; grid-template-rows: 0fr; padding: 0 17px; transition: grid-template-rows .45s cubic-bezier(.16,1,.3,1); }
+  .folder-card.open .folder-body { grid-template-rows: 1fr; }
+  .fb-inner { overflow: hidden; min-height: 0; }
+  .fb-pad { padding: 2px 0 15px; }
   .folder-card.open { --cv-c: #00FF41; }
   .folder-body .swipe-row { margin-bottom: 10px; }
   .folder-body .swipe-row:last-child { margin-bottom: 0; }
@@ -239,8 +330,8 @@
     cursor: pointer; border: 1px solid transparent;
   }
   .field-row:active { border-color: var(--accent-1); }
-  .field-row .flabel { font-size: 11px; color: var(--text-dim); font-weight: 500; margin-bottom: 2px; }
-  .field-row .fvalue { font-size: 15px; font-weight: 600; word-break: break-all; }
+  .field-row .flabel { font-size: 12.5px; color: var(--text-dim); font-weight: 500; margin-bottom: 2px; }
+  .field-row .fvalue { font-size: 16px; font-weight: 600; word-break: break-all; }
   .field-row .ftext { flex: 1; min-width: 0; }
   .field-row .feye { color: var(--text-dim); font-size: 16px; padding: 4px; flex-shrink: 0; }
   .field-row .fcopy { color: var(--accent-1); font-size: 16px; padding: 4px; flex-shrink: 0; }
@@ -277,7 +368,7 @@
 
   .sfield { margin-bottom: 14px; }
   .sfield label {
-    display: block; font-size: 9px; color: rgba(0,143,17,0.7); margin-bottom: 6px;
+    display: block; font-size: 12px; color: rgba(0,143,17,0.7); margin-bottom: 6px;
     font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase;
   }
   .sfield-row { display: flex; gap: 8px; align-items: flex-end; }
@@ -337,7 +428,7 @@
   }
   .autosync-line input { width: 16px; height: 16px; accent-color: var(--accent-1); flex-shrink: 0; }
   /* corner-bracket decoration ("CodeVault" motif) — 4 explicit corner marks, traced from the approved mockup */
-  .cvc { position: absolute; width: 7px; height: 7px; pointer-events: none; border-color: var(--cv-c, var(--border)); }
+  .cvc { position: absolute; width: 7px; height: 7px; pointer-events: none; border-color: var(--cv-c, var(--accent-2)); transition: border-color .4s ease; }
   .cvc.tl { top: 3px; left: 3px; border-top: 1.4px solid; border-left: 1.4px solid; }
   .cvc.tr { top: 3px; right: 3px; border-top: 1.4px solid; border-right: 1.4px solid; }
   .cvc.bl { bottom: 3px; left: 3px; border-bottom: 1.4px solid; border-left: 1.4px solid; }
@@ -1305,7 +1396,6 @@ function renderFolderGroups() {
 }
 
 /* ========================= 背景の流れるコード(CodeVault) ========================= */
-const RAIN_FALL_MS = 3600; // 全ての列を必ずこの同じ速さで、一番下まで流し切る
 let rainPulseSeq = 0;
 function pulseRain() {
   const rw = document.getElementById("rainWrap");
@@ -1317,11 +1407,7 @@ function pulseRain() {
   setTimeout(() => {
     if (rainPulseSeq !== seq) return; // その間に別の操作があれば古い方は反映しない
     rw.classList.remove("resetting");
-    rw.classList.add("flash");
-    setTimeout(() => {
-      if (rainPulseSeq !== seq) return;
-      rw.classList.remove("flash"); // 一番下まで流れ切ってから、フェードアウトして消える(上に戻らない)
-    }, RAIN_FALL_MS + 80);
+    rw.classList.add("flash"); // 1回だけ流れて、マスごとに自然に消える(モックアップと同じ)
   }, 60);
 }
 function setRainActive(on) {
@@ -1331,30 +1417,32 @@ function setRainActive(on) {
   rw.classList.remove("resetting", "flash");
   rw.classList.toggle("active", on);
 }
+/* 背景コード: モックアップの「成長カスケード」をそのままトレース。固定のマス(高さ9px)が
+   上から順に「白→緑→薄れて消える」を繰り返す。列の位置・3種類の速さ(A/B/C)もモックアップと同じ */
 function renderRainColumns() {
-  const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const colCount = 16;
-  const durS = (RAIN_FALL_MS / 1000).toFixed(2);
-  const cols = [];
-  for (let i = 0; i < colCount; i++) {
-    const left = ((i + 0.5) / colCount) * 100;
-    const len = 22 + Math.floor(Math.random() * 14);
-    let body = "";
-    for (let j = 0; j < len - 1; j++) body += chars[Math.floor(Math.random() * chars.length)] + "\n";
-    const head = chars[Math.floor(Math.random() * chars.length)]; // 一番下(先頭)の文字だけ白く光らせる
-    // すべての列を同じdurationにすることで、速さを完全に揃える(列によってバラバラにならない)
-    cols.push(`<div class="rain-col" style="left:${left.toFixed(2)}%;animation-duration:${durS}s;">${body}<span class="rain-head">${head}</span></div>`);
-  }
-  return cols.join("");
-}
-
-function cornerBrackets(color) {
-  return `<div style="position:absolute; top:3px; left:3px; width:7px; height:7px; border-top:1.4px solid ${color}; border-left:1.4px solid ${color};"></div><div style="position:absolute; top:3px; right:3px; width:7px; height:7px; border-top:1.4px solid ${color}; border-right:1.4px solid ${color};"></div><div style="position:absolute; bottom:3px; left:3px; width:7px; height:7px; border-bottom:1.4px solid ${color}; border-left:1.4px solid ${color};"></div><div style="position:absolute; bottom:3px; right:3px; width:7px; height:7px; border-bottom:1.4px solid ${color}; border-right:1.4px solid ${color};"></div>`;
+  const CH = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789:.=*+-<>¥?!)(";
+  const specs = [
+    { x: 41, p: "B", off: 4.08 }, { x: 84, p: "B", off: 3.95 }, { x: 150, p: "A", off: 0.36 },
+    { x: 227, p: "C", off: 3.64 }, { x: 233, p: "C", off: 2.9 }, { x: 374, p: "A", off: 1.72 },
+  ];
+  const rows = Math.max(94, Math.ceil(window.innerHeight / 9) + 2);
+  const rnd = () => CH[Math.floor(Math.random() * CH.length)];
+  return specs.map((sp) => {
+    let t = sp.off, html = "";
+    for (let i = 0; i < rows; i++) {
+      const br = Math.random() < 0.5 ? "br" : "md";
+      const flip = Math.random() < 0.5 ? ' style="transform:scaleX(-1);"' : "";
+      html += `<div class="gcell"${flip}><span class="gc1 pp${sp.p}_${br}" style="animation-delay:${t.toFixed(3)}s;">${rnd()}</span><span class="gc2 pp${sp.p}" style="animation-delay:${t.toFixed(3)}s;">${rnd()}</span></div>`;
+      t += 0.03 + Math.random() * 0.08;
+    }
+    return `<div class="rcol2" style="left:${sp.x}px;height:${rows * 9}px;">${html}</div>`;
+  }).join("");
 }
 
 /* コーナーブラケット装飾(4隅の小さいL字)。承認済みモックアップの実寸(7px/1.4px/3px)をそのままトレース */
 function cvCorners(color) {
-  return `<span class="cvc tl" style="border-color:${color}"></span><span class="cvc tr" style="border-color:${color}"></span><span class="cvc bl" style="border-color:${color}"></span><span class="cvc br" style="border-color:${color}"></span>`;
+  const st = color ? ` style="border-color:${color}"` : "";
+  return `<span class="cvc tl"${st}></span><span class="cvc tr"${st}></span><span class="cvc bl"${st}></span><span class="cvc br"${st}></span>`;
 }
 /* サブ画面共通ヘッダー(戻る矢印+タイトル)。モックアップの各サブ画面ヘッダーをトレース */
 function sheetHead2(title, backBtnId) {
@@ -1397,7 +1485,7 @@ function renderFolderCard({ folder, sites }) {
   const cv = isOpen ? "#00FF41" : "var(--accent-2)";
   const folderCardHtml = `
     <div class="folder-card ${isOpen ? "open" : ""}" data-folder="${folder.id}" style="--card-dim:${dimmed ? 0.4 : 1}; --card-scale:${dimmed ? 0.98 : 1};">
-      ${cornerBrackets(cv)}
+      ${cvCorners()}
       <div class="folder-head" data-toggle-folder="${folder.id}">
         <div class="badge-ring">${ICONS[iconKey]}</div>
         <div class="folder-name-wrap">
@@ -1407,7 +1495,7 @@ function renderFolderCard({ folder, sites }) {
         <button class="icon-edit-btn" data-rename-folder="${folder.id}" aria-label="フォルダ名を変更">${ICONS.pencil}</button>
         <div class="chevron-icon">${ICONS.chevRight}</div>
       </div>
-      <div class="folder-body">${innerHtml}</div>
+      <div class="folder-body"><div class="fb-inner"><div class="fb-pad">${innerHtml}</div></div></div>
     </div>`;
 
   return `
@@ -1421,7 +1509,7 @@ function renderFolderCard({ folder, sites }) {
 
 function renderMain() {
   return `
-  <div class="rain-wrap" id="rainWrap">${renderRainColumns()}</div>
+  <div class="rain-wrap" id="rainWrap">${renderRainColumns()}<div class="rain-shade"></div></div>
   <header class="top">
     <h2>VAULTLY</h2>
     <div class="header-icons">
@@ -1466,7 +1554,7 @@ function renderSiteCard(site) {
     </div>
     <div class="swipe-fg">
       <div class="site-card ${isOpen ? "open" : ""}" data-site="${site.id}" style="--card-dim:${dimmed ? 0.4 : 1}; --card-scale:${dimmed ? 0.98 : 1};">
-        ${cornerBrackets(cv)}
+        ${cvCorners()}
         <div class="site-head" data-toggle-site="${site.id}">
           <div class="badge-ring">${ICONS.keyGeneric}</div>
           <div class="site-name-wrap">
@@ -1476,10 +1564,10 @@ function renderSiteCard(site) {
           <button class="icon-edit-btn" data-edit="${site.id}" aria-label="編集">${ICONS.pencil}</button>
           <div class="chevron-icon">${ICONS.chevDown}</div>
         </div>
-        <div class="site-body">
+        <div class="site-body"><div class="sb-inner"><div class="sb-pad">
           ${fieldsHtml}
           ${memoHtml}
-        </div>
+        </div></div></div>
       </div>
     </div>
   </div>`;
@@ -1494,6 +1582,25 @@ function bindMain() {
   document.getElementById("searchBtn").addEventListener("click", () => { pulseRain(); openSearchSheet(); });
 
   bindListEvents();
+}
+
+/* 開閉・暗くする効果を、要素を作り直さずにクラスの付け替えだけで反映する */
+function applyOpenState() {
+  const anyFolderOpen = state.openFolderIds.size > 0;
+  document.querySelectorAll(".folder-card[data-folder]").forEach((el) => {
+    const open = state.openFolderIds.has(el.getAttribute("data-folder"));
+    el.classList.toggle("open", open);
+    const dim = anyFolderOpen && !open;
+    el.style.setProperty("--card-dim", dim ? 0.4 : 1);
+    el.style.setProperty("--card-scale", dim ? 0.98 : 1);
+  });
+  document.querySelectorAll(".site-card[data-site]").forEach((el) => {
+    const open = state.openSiteId === el.getAttribute("data-site");
+    el.classList.toggle("open", open);
+    const dim = !!state.openSiteId && !open;
+    el.style.setProperty("--card-dim", dim ? 0.4 : 1);
+    el.style.setProperty("--card-scale", dim ? 0.98 : 1);
+  });
 }
 
 function renderPartialList() {
@@ -1513,7 +1620,7 @@ function bindListEvents() {
       else state.openFolderIds.add(id);
       saveOpenFolderIds();
       pulseRain();
-      renderPartialList();
+      applyOpenState(); // 作り直さずその場で開閉する(アニメーションを滑らかに見せるため)
     });
   });
   document.querySelectorAll("[data-toggle-site]").forEach((el) => {
@@ -1523,7 +1630,7 @@ function bindListEvents() {
       const id = el.getAttribute("data-toggle-site");
       state.openSiteId = state.openSiteId === id ? null : id;
       if (state.openSiteId) setRainActive(true); else pulseRain();
-      renderPartialList();
+      applyOpenState();
     });
   });
   document.querySelectorAll("[data-toggle]").forEach((el) => {
