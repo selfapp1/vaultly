@@ -1,4 +1,4 @@
-const CACHE_NAME = "passvault-cache-v2";
+const CACHE_NAME = "passvault-cache-v3";
 const ASSETS = [
   "./",
   "./index.html",
