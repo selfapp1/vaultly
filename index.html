@@ -422,12 +422,7 @@
   .search-card .sname { font-size: 18px; color: var(--text); }
   .search-card .sname b { font-weight: 400; color: #00FF41; }
   .search-card .ssub { font-size: 10px; color: rgba(231,247,236,0.45); margin-top: 3px; }
-  .settings-row.autolock-block { display: block; cursor: default; padding: 13px 4px 14px; }
-  .autolock-title { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-  .autolock-title .si-icon { display: flex; flex-shrink: 0; color: var(--accent-2); }
-  .autolock-title .si-icon svg { width: 15px; height: 15px; }
-  .autolock-actions { display: flex; gap: 8px; margin-top: 10px; }
-  .autolock-actions .btn { padding: 9px; font-size: 11px; }
+  .settings-value { font-size: 10px; color: rgba(231,247,236,0.45); flex-shrink: 0; }
   .autolock-row { display: flex; gap: 6px; }
   .autolock-chip {
     flex: 1; min-width: 0; padding: 11px 0; text-align: center; font-family: inherit; font-size: 10px; cursor: pointer;
@@ -2179,16 +2174,7 @@ function openSettingsSheet() {
       <div class="settings-group-label">ACCOUNT</div>
       <div class="settings-group">
         <button type="button" class="settings-row" id="changePwBtn"><span class="si-icon">${ICONS.key}</span><span style="flex:1;">CHANGE MASTER PASSWORD</span><span class="si-chev">${ICONS.chevRight}</span></button>
-        <div class="settings-row autolock-block">
-          <div class="autolock-title"><span class="si-icon">${ICONS.lockSmall}</span><span style="flex:1;">AUTO-LOCK TIME</span></div>
-          <div class="autolock-row">
-            ${AUTOLOCK_CHOICES.map((m) => `<button type="button" class="autolock-chip${m === getAutoLockMin() ? " selected" : ""}" data-autolock="${m}">${m} MIN</button>`).join("")}
-          </div>
-          <div class="autolock-actions">
-            <button type="button" class="btn secondary" id="autolockCancel">[&nbsp;CANCEL&nbsp;]</button>
-            <button type="button" class="btn" id="autolockSave">[&nbsp;SAVE&nbsp;]</button>
-          </div>
-        </div>
+        <button type="button" class="settings-row" id="autolockBtn"><span class="si-icon">${ICONS.lockSmall}</span><span style="flex:1;">AUTO-LOCK TIME</span><span class="settings-value">${getAutoLockMin()} MIN</span><span class="si-chev">${ICONS.chevRight}</span></button>
       </div>
       <div class="settings-group-label">BACKUP</div>
       <div class="settings-group">
@@ -2212,21 +2198,7 @@ function openSettingsSheet() {
   showOverlay();
 
   document.getElementById("closeSettingsBtn").addEventListener("click", closeOverlay);
-  let pendingAutoLock = getAutoLockMin(); // 選んだだけでは反映せず、SAVEを押したときに反映する
-  const paintAutoLock = (m) => document.querySelectorAll("[data-autolock]").forEach((x) => x.classList.toggle("selected", Number(x.getAttribute("data-autolock")) === m));
-  document.querySelectorAll("[data-autolock]").forEach((b) => b.addEventListener("click", () => {
-    pendingAutoLock = Number(b.getAttribute("data-autolock"));
-    paintAutoLock(pendingAutoLock);
-  }));
-  document.getElementById("autolockCancel").addEventListener("click", () => {
-    pendingAutoLock = getAutoLockMin();
-    paintAutoLock(pendingAutoLock);
-  });
-  document.getElementById("autolockSave").addEventListener("click", () => {
-    localStorage.setItem(AUTOLOCK_KEY, String(pendingAutoLock));
-    resetIdleTimer();
-    showToast(`${pendingAutoLock}分でロックします`);
-  });
+  document.getElementById("autolockBtn").addEventListener("click", openAutoLockSheet);
   document.getElementById("changePwBtn").addEventListener("click", openChangePasswordSheet);
   document.getElementById("exportBtn").addEventListener("click", exportBackup);
   document.getElementById("importBtn2").addEventListener("click", () => document.getElementById("importFile2").click());
@@ -2243,6 +2215,40 @@ function openSettingsSheet() {
     if (!ok2) return;
     localStorage.removeItem(STORE_KEY);
     location.reload();
+  });
+}
+
+/* ロック時間の選択画面(設定から開く3階層目)。選んだだけでは反映せず、SAVEで反映、CANCELで破棄して設定画面へ戻る */
+function openAutoLockSheet() {
+  let pending = getAutoLockMin();
+  const overlay = getOverlay();
+  overlay.innerHTML = `
+    <div class="sheet">
+      ${sheetHead2("AUTO-LOCK TIME", "autolockBack")}
+      <div class="sfield">
+        <label>LOCK AFTER</label>
+        <div class="autolock-row">
+          ${AUTOLOCK_CHOICES.map((m) => `<button type="button" class="autolock-chip${m === pending ? " selected" : ""}" data-autolock="${m}">${m} MIN</button>`).join("")}
+        </div>
+      </div>
+      <div class="settings-note" style="margin-top:4px;">操作せずに放置すると、選んだ時間が過ぎたところで自動的にロックされ、マスターパスワードの入力画面に戻ります。</div>
+      <div class="btn-row">
+        <button class="btn secondary" id="autolockCancel">[&nbsp;CANCEL&nbsp;]</button>
+        <button class="btn" id="autolockSave">[&nbsp;SAVE&nbsp;]</button>
+      </div>
+    </div>`;
+  showOverlay();
+  document.querySelectorAll("[data-autolock]").forEach((b) => b.addEventListener("click", () => {
+    pending = Number(b.getAttribute("data-autolock"));
+    document.querySelectorAll("[data-autolock]").forEach((x) => x.classList.toggle("selected", x === b));
+  }));
+  document.getElementById("autolockBack").addEventListener("click", openSettingsSheet);
+  document.getElementById("autolockCancel").addEventListener("click", openSettingsSheet);
+  document.getElementById("autolockSave").addEventListener("click", () => {
+    localStorage.setItem(AUTOLOCK_KEY, String(pending));
+    resetIdleTimer();
+    showToast(`${pending}分でロックします`);
+    openSettingsSheet();
   });
 }
 
