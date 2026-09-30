@@ -422,6 +422,13 @@
   .search-card .sname { font-size: 18px; color: var(--text); }
   .search-card .sname b { font-weight: 400; color: #00FF41; }
   .search-card .ssub { font-size: 10px; color: rgba(231,247,236,0.45); margin-top: 3px; }
+  .autolock-row { display: flex; gap: 6px; }
+  .autolock-chip {
+    flex: 1; min-width: 0; padding: 11px 0; text-align: center; font-family: inherit; font-size: 10px; cursor: pointer;
+    background: var(--surface); color: rgba(231,247,236,0.5); border: 1px solid rgba(0,143,17,0.35);
+    box-shadow: 0 0 4px rgba(0,143,17,0.35), 0 0 9px rgba(0,143,17,0.35); border-radius: 0;
+  }
+  .autolock-chip.selected { color: var(--text); font-weight: bold; border-color: rgba(0,255,65,0.85); box-shadow: 0 0 4px rgba(0,255,65,0.85), 0 0 9px rgba(0,255,65,0.85); }
   /* toast */
   #toast {
     position: fixed; left: 50%; bottom: calc(30px + var(--safe-bottom)); transform: translateX(-50%) translateY(20px);
@@ -1167,11 +1174,16 @@ const FOLDER_ICON_NAMES = {
 };
 
 /* ========================= 自動ロック ========================= */
-const IDLE_MS = 5 * 60 * 1000;
+const AUTOLOCK_KEY = "pv_autolock_min";
+const AUTOLOCK_CHOICES = [1, 3, 5, 10, 15, 30];
+function getAutoLockMin() {
+  const v = Number(localStorage.getItem(AUTOLOCK_KEY));
+  return AUTOLOCK_CHOICES.includes(v) ? v : 5; // 未設定なら今までどおり5分
+}
 function resetIdleTimer() {
   if (!state.key) return;
   clearTimeout(idleTimer);
-  idleTimer = setTimeout(lockVault, IDLE_MS);
+  idleTimer = setTimeout(lockVault, getAutoLockMin() * 60 * 1000);
 }
 ["click", "touchstart", "keydown", "scroll"].forEach((ev) =>
   document.addEventListener(ev, resetIdleTimer, { passive: true })
@@ -2312,6 +2324,12 @@ function openChangePasswordSheet() {
         <label>CONFIRM NEW PASSWORD</label>
         <input type="password" id="newPw2" inputmode="numeric" autocomplete="new-password" />
       </div>
+      <div class="sfield" style="margin-top:6px;">
+        <label>AUTO-LOCK TIME</label>
+        <div class="autolock-row">
+          ${AUTOLOCK_CHOICES.map((m) => `<button type="button" class="autolock-chip${m === getAutoLockMin() ? " selected" : ""}" data-autolock="${m}">${m} MIN</button>`).join("")}
+        </div>
+      </div>
       <div class="error-msg" id="changePwError"></div>
       <div class="btn-row">
         <button class="btn secondary" id="cancelChangePw2">[&nbsp;CANCEL&nbsp;]</button>
@@ -2319,6 +2337,12 @@ function openChangePasswordSheet() {
       </div>
     </div>`;
   showOverlay();
+  document.querySelectorAll("[data-autolock]").forEach((b) => b.addEventListener("click", () => {
+    localStorage.setItem(AUTOLOCK_KEY, b.getAttribute("data-autolock"));
+    document.querySelectorAll("[data-autolock]").forEach((x) => x.classList.toggle("selected", x === b));
+    resetIdleTimer();
+    showToast(`${b.getAttribute("data-autolock")}分でロックします`);
+  }));
   document.getElementById("cancelChangePw").addEventListener("click", openSettingsSheet);
   document.getElementById("cancelChangePw2").addEventListener("click", openSettingsSheet);
   document.getElementById("confirmChangePw").addEventListener("click", async () => {
