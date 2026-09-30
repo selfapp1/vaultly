@@ -1566,7 +1566,6 @@ function renderSiteCard(site) {
   const isOpen = state.openSiteId === site.id;
   const dimmed = !!state.openSiteId && !isOpen;
   const cv = isOpen ? "#00FF41" : "var(--accent-2)";
-  const sub = site.entries[0] ? escapeHtml(site.entries[0].value) : "";
   const fieldsHtml = site.entries.map((f) => {
     const masked = isMasked(f);
     const displayVal = masked ? "••••••••" : escapeHtml(f.value);
@@ -1595,7 +1594,6 @@ function renderSiteCard(site) {
           <div class="badge-ring">${ICONS.keyGeneric}</div>
           <div class="site-name-wrap">
             <div class="site-name">${escapeHtml(site.name)}</div>
-            ${sub ? `<div class="site-sub">${sub}</div>` : ""}
           </div>
           <button class="icon-edit-btn" data-edit="${site.id}" aria-label="編集">${ICONS.pencil}</button>
           <div class="chevron-icon">${ICONS.chevDown}</div>
