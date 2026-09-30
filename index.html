@@ -366,7 +366,7 @@
   }
   .overlay.show .sheet { animation: screenEnter 0.5s cubic-bezier(.16,1,.3,1) both; }
   @keyframes screenEnter { 0% { opacity: 0; transform: translateY(14px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-  body.sub-open header.top, body.sub-open main.content, body.sub-open .header-subtitle, body.sub-open .fab { visibility: hidden; }
+  body.sub-open #app > *:not(.rain-wrap) { visibility: hidden; }
   .sheet-handle { height: 22px; visibility: hidden; }
   .sheet-title { font-size: 16px; font-weight: 800; margin: 0 0 16px; letter-spacing: 0.05em; color: var(--accent-1); text-shadow: 0 0 4px currentColor, 0 0 9px currentColor; }
 
@@ -634,6 +634,7 @@ function clearCachedGdriveRefreshToken() {
    毎回ユーザーに再連携を求めずに済むようにしている。 */
 const GDRIVE_REDIRECT_URI = location.origin + location.pathname;
 const GDRIVE_RESUME_SYNC_KEY = "pv_gdrive_resume_sync";
+const GDRIVE_RESUME_TAKEOVER_KEY = "pv_gdrive_resume_takeover"; // 新しい端末で「引き継ぐ」→ Googleサインイン後に、パスワード入力画面へ戻すための目印
 const GDRIVE_PKCE_VERIFIER_KEY = "pv_gdrive_pkce_verifier";
 
 function base64UrlEncode(bytes) {
@@ -791,16 +792,22 @@ function chooseGdriveFolderMode() {
     const overlay = getOverlay();
     overlay.innerHTML = `
       <div class="sheet">
-        <div class="sheet-handle"></div>
-        <div class="sheet-title">保存先を選択</div>
-        <button class="settings-item" id="pickRootBtn"><span class="si-icon">${ICONS.folder}</span>マイドライブ直下に保存する</button>
-        <button class="settings-item" id="pickBrowseBtn"><span class="si-icon">${ICONS.folder}</span>既存のフォルダから選ぶ</button>
-        <button class="btn secondary" id="cancelPickModeBtn">キャンセル</button>
+        ${sheetHead2("SAVE LOCATION", "cancelPickModeBack")}
+        <div class="settings-group">
+          <button type="button" class="settings-row" id="pickRootBtn"><span class="si-icon">${ICONS.folder}</span><span style="flex:1;">マイドライブ直下に保存する</span><span class="si-chev">${ICONS.chevRight}</span></button>
+          <button type="button" class="settings-row" id="pickBrowseBtn"><span class="si-icon">${ICONS.folder}</span><span style="flex:1;">既存のフォルダから選ぶ</span><span class="si-chev">${ICONS.chevRight}</span></button>
+        </div>
+        <div class="settings-note">バックアップの保存先を選んでください。「既存のフォルダから選ぶ」を押すと、Googleのフォルダ選択画面が開きます。</div>
+        <div class="btn-row">
+          <button class="btn secondary" id="cancelPickModeBtn">[&nbsp;CANCEL&nbsp;]</button>
+        </div>
       </div>`;
     showOverlay();
+    const cancel = () => { closeOverlay(); reject(new Error("folder-pick-cancelled")); };
     document.getElementById("pickRootBtn").addEventListener("click", () => { closeOverlay(); resolve("root"); });
-    document.getElementById("pickBrowseBtn").addEventListener("click", () => { closeOverlay(); resolve("browse"); });
-    document.getElementById("cancelPickModeBtn").addEventListener("click", () => { closeOverlay(); reject(new Error("folder-pick-cancelled")); });
+    document.getElementById("pickBrowseBtn").addEventListener("click", () => { closeOverlay(); showToast("フォルダ選択画面を開いています…"); resolve("browse"); });
+    document.getElementById("cancelPickModeBtn").addEventListener("click", cancel);
+    document.getElementById("cancelPickModeBack").addEventListener("click", cancel);
   });
 }
 
@@ -1283,11 +1290,19 @@ function bindSetup() {
     cacheKeyForSession(key);
     render();
   });
-  document.getElementById("takeOverBtn").addEventListener("click", openTakeOverSheet);
+  document.getElementById("takeOverBtn").addEventListener("click", startTakeOver);
 }
 
 /* 2台目以降の端末用: Googleドライブの既存バックアップと同じsalt(暗号化の鍵の元)をそのまま引き継ぐことで、
    1台目と全く同じマスターパスワードで開けるようにする */
+/* 新しい端末での引き継ぎ: 最初の1回だけGoogleのサインイン画面へ進む。連携済み(次回以降)なら、そのままパスワード入力画面を開く */
+async function startTakeOver() {
+  if (await ensureGdriveAccessToken()) { openTakeOverSheet(); return; }
+  showToast("Googleのサインイン画面へ移動します…");
+  localStorage.setItem(GDRIVE_RESUME_TAKEOVER_KEY, "1");
+  redirectToGoogleSignIn();
+}
+
 function openTakeOverSheet() {
   const overlay = getOverlay();
   overlay.innerHTML = `
@@ -1315,6 +1330,12 @@ function openTakeOverSheet() {
     const errEl = document.getElementById("takeOverError");
     errEl.textContent = "";
     try {
+      if (!(await ensureGdriveAccessToken())) { // サインインが切れていたら、もう一度サインイン画面へ
+        showToast("Googleのサインイン画面へ移動します…");
+        localStorage.setItem(GDRIVE_RESUME_TAKEOVER_KEY, "1");
+        redirectToGoogleSignIn();
+        return;
+      }
       showToast("Googleドライブを確認しています…");
       const { backupStore, modifiedTime } = await downloadBackupFromDrive();
       const key = await deriveKey(pw, backupStore.salt, backupStore.iterations);
@@ -1331,11 +1352,14 @@ function openTakeOverSheet() {
       render();
     } catch (e) {
       console.error(e);
-      if (e.code === "no-backup-found") {
-        errEl.textContent = "Googleドライブにバックアップが見つかりませんでした";
-      } else {
-        errEl.textContent = "パスワードが違うか、読み込みに失敗しました";
-      }
+      let msg;
+      if (e.code === "no-backup-found") msg = "Googleドライブにバックアップが見つかりませんでした";
+      else if (e.message === "folder-pick-cancelled") msg = "保存先フォルダの選択をキャンセルしました";
+      else if (e.code === "gdrive-auth-required") msg = "Googleとの連携が必要です。もう一度お試しください";
+      else if (/読み込みに失敗/.test(e.message || "")) msg = e.message;
+      else msg = `パスワードが違うか、読み込みに失敗しました(${(e && e.message) || e})`;
+      openTakeOverSheet(); // フォルダ選択などで画面が切り替わっている場合に、入力画面へ戻してエラーを見せる
+      document.getElementById("takeOverError").textContent = msg;
     }
   });
 }
@@ -2701,6 +2725,14 @@ function render() {
     localStorage.removeItem(GDRIVE_RESUME_SYNC_KEY);
   }
   render();
+  // 新しい端末で引き継ぎ中にGoogleサインインから戻ってきたら、パスワード入力画面を開き直す
+  if (returnedFromGoogle && !state.key && localStorage.getItem(GDRIVE_RESUME_TAKEOVER_KEY) === "1") {
+    localStorage.removeItem(GDRIVE_RESUME_TAKEOVER_KEY);
+    if (await ensureGdriveAccessToken()) {
+      openTakeOverSheet();
+      showToast("Googleと連携しました。マスターパスワードを入力してください");
+    }
+  }
 })();
 
 /* ========================= Service Worker ========================= */
