@@ -422,6 +422,12 @@
   .search-card .sname { font-size: 18px; color: var(--text); }
   .search-card .sname b { font-weight: 400; color: #00FF41; }
   .search-card .ssub { font-size: 10px; color: rgba(231,247,236,0.45); margin-top: 3px; }
+  .settings-row.autolock-block { display: block; cursor: default; padding: 13px 4px 14px; }
+  .autolock-title { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .autolock-title .si-icon { display: flex; flex-shrink: 0; color: var(--accent-2); }
+  .autolock-title .si-icon svg { width: 15px; height: 15px; }
+  .autolock-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .autolock-actions .btn { padding: 9px; font-size: 11px; }
   .autolock-row { display: flex; gap: 6px; }
   .autolock-chip {
     flex: 1; min-width: 0; padding: 11px 0; text-align: center; font-family: inherit; font-size: 10px; cursor: pointer;
@@ -2173,6 +2179,16 @@ function openSettingsSheet() {
       <div class="settings-group-label">ACCOUNT</div>
       <div class="settings-group">
         <button type="button" class="settings-row" id="changePwBtn"><span class="si-icon">${ICONS.key}</span><span style="flex:1;">CHANGE MASTER PASSWORD</span><span class="si-chev">${ICONS.chevRight}</span></button>
+        <div class="settings-row autolock-block">
+          <div class="autolock-title"><span class="si-icon">${ICONS.lockSmall}</span><span style="flex:1;">AUTO-LOCK TIME</span></div>
+          <div class="autolock-row">
+            ${AUTOLOCK_CHOICES.map((m) => `<button type="button" class="autolock-chip${m === getAutoLockMin() ? " selected" : ""}" data-autolock="${m}">${m} MIN</button>`).join("")}
+          </div>
+          <div class="autolock-actions">
+            <button type="button" class="btn secondary" id="autolockCancel">[&nbsp;CANCEL&nbsp;]</button>
+            <button type="button" class="btn" id="autolockSave">[&nbsp;SAVE&nbsp;]</button>
+          </div>
+        </div>
       </div>
       <div class="settings-group-label">BACKUP</div>
       <div class="settings-group">
@@ -2196,6 +2212,21 @@ function openSettingsSheet() {
   showOverlay();
 
   document.getElementById("closeSettingsBtn").addEventListener("click", closeOverlay);
+  let pendingAutoLock = getAutoLockMin(); // 選んだだけでは反映せず、SAVEを押したときに反映する
+  const paintAutoLock = (m) => document.querySelectorAll("[data-autolock]").forEach((x) => x.classList.toggle("selected", Number(x.getAttribute("data-autolock")) === m));
+  document.querySelectorAll("[data-autolock]").forEach((b) => b.addEventListener("click", () => {
+    pendingAutoLock = Number(b.getAttribute("data-autolock"));
+    paintAutoLock(pendingAutoLock);
+  }));
+  document.getElementById("autolockCancel").addEventListener("click", () => {
+    pendingAutoLock = getAutoLockMin();
+    paintAutoLock(pendingAutoLock);
+  });
+  document.getElementById("autolockSave").addEventListener("click", () => {
+    localStorage.setItem(AUTOLOCK_KEY, String(pendingAutoLock));
+    resetIdleTimer();
+    showToast(`${pendingAutoLock}分でロックします`);
+  });
   document.getElementById("changePwBtn").addEventListener("click", openChangePasswordSheet);
   document.getElementById("exportBtn").addEventListener("click", exportBackup);
   document.getElementById("importBtn2").addEventListener("click", () => document.getElementById("importFile2").click());
@@ -2324,12 +2355,6 @@ function openChangePasswordSheet() {
         <label>CONFIRM NEW PASSWORD</label>
         <input type="password" id="newPw2" inputmode="numeric" autocomplete="new-password" />
       </div>
-      <div class="sfield" style="margin-top:6px;">
-        <label>AUTO-LOCK TIME</label>
-        <div class="autolock-row">
-          ${AUTOLOCK_CHOICES.map((m) => `<button type="button" class="autolock-chip${m === getAutoLockMin() ? " selected" : ""}" data-autolock="${m}">${m} MIN</button>`).join("")}
-        </div>
-      </div>
       <div class="error-msg" id="changePwError"></div>
       <div class="btn-row">
         <button class="btn secondary" id="cancelChangePw2">[&nbsp;CANCEL&nbsp;]</button>
@@ -2337,12 +2362,6 @@ function openChangePasswordSheet() {
       </div>
     </div>`;
   showOverlay();
-  document.querySelectorAll("[data-autolock]").forEach((b) => b.addEventListener("click", () => {
-    localStorage.setItem(AUTOLOCK_KEY, b.getAttribute("data-autolock"));
-    document.querySelectorAll("[data-autolock]").forEach((x) => x.classList.toggle("selected", x === b));
-    resetIdleTimer();
-    showToast(`${b.getAttribute("data-autolock")}分でロックします`);
-  }));
   document.getElementById("cancelChangePw").addEventListener("click", openSettingsSheet);
   document.getElementById("cancelChangePw2").addEventListener("click", openSettingsSheet);
   document.getElementById("confirmChangePw").addEventListener("click", async () => {
@@ -2572,6 +2591,25 @@ function closeOverlay() {
   if (overlay) overlay.classList.remove("show");
   document.body.classList.remove("sub-open");
 }
+
+/* 左端から右へスワイプで「戻る」(ホーム画面のアプリには標準の戻る操作が無いため)。画面の左上の矢印を押すのと同じ動き */
+(function setupSwipeBack() {
+  let sx = 0, sy = 0, tracking = false;
+  document.addEventListener("touchstart", (e) => {
+    const ov = document.getElementById("overlay");
+    tracking = !!(ov && ov.classList.contains("show") && e.touches.length === 1 && e.touches[0].clientX < 32);
+    if (tracking) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }
+  }, { passive: true });
+  document.addEventListener("touchend", (e) => {
+    if (!tracking) return;
+    tracking = false;
+    const t = e.changedTouches[0];
+    if (t.clientX - sx > 70 && Math.abs(t.clientY - sy) < 60) {
+      const back = document.querySelector("#overlay .back-btn");
+      if (back) back.click();
+    }
+  }, { passive: true });
+})();
 
 /* ========================= ルート描画 ========================= */
 function render() {
