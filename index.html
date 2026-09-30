@@ -142,6 +142,10 @@
   .rain-wrap.flash *{animation-play-state:running !important; animation-iteration-count:1 !important;}
   .rain-wrap.resetting *{animation-name:none !important; animation-play-state:paused !important;}
   .rain-shade{position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.2) 30%, rgba(0,0,0,0.6) 100%);}
+  .folder-name .dc { display: inline-block; min-width: 0.55em; }
+  .folder-name .dscr { color: #00FF41; text-shadow: 0 0 6px #00FF41; }
+  .folder-name .dfix { animation: decodePop .35s ease-out; }
+  @keyframes decodePop { 0% { color: #00FF41; text-shadow: 0 0 10px #00FF41; } 100% { color: var(--text); text-shadow: none; } }
   .rcol2{position:absolute; top:0; width:14px; overflow:hidden; display:flex; flex-direction:column; contain:strict; will-change:transform; transform:translateZ(0);}
   .gc1 .dk{position:absolute; left:calc(50% + 2px); top:-1px; font-style:normal;}
   .gcell{position:relative; height:9px; line-height:9px; text-align:center; font-family:'Share Tech Mono',monospace; font-size:10px; -webkit-text-stroke:0.35px currentColor;}
@@ -1191,6 +1195,7 @@ function resetIdleTimer() {
 );
 
 function lockVault() {
+  decodedSinceLock = false;
   state.key = null;
   state.vault = null;
   state.openSiteId = null;
@@ -1415,6 +1420,49 @@ function renderFolderGroups() {
   const foldersHtml = groups.map(renderFolderCard).join("");
   const unassignedHtml = unassigned.map(renderSiteCard).join(""); // フォルダに入れていないアカウントは、そのまま一覧に出す(未分類フォルダは作らない)
   return foldersHtml + unassignedHtml;
+}
+
+/* ========================= フォルダ名の解読エフェクト =========================
+   暗号の文字から、左の1文字ずつ本物の文字に決まっていく(NORMAL: 1文字0.12秒)。1回だけ再生。
+   再生するのは「ロック解除後の最初のトップ画面」と「設定画面からトップ画面へ戻ったとき」 */
+let decodedSinceLock = false;
+const DECODE_POOL = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789:.=*+-<>?!";
+const DECODE_LOCK_MS = 120, DECODE_TICK_MS = 45;
+const decodeTimers = new Map();
+function decodeName(el) {
+  const text = el.getAttribute("data-text") || el.textContent;
+  el.setAttribute("data-text", text);
+  clearInterval(decodeTimers.get(el));
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = text; return; }
+  const rnd = () => DECODE_POOL.charAt(Math.floor(Math.random() * DECODE_POOL.length));
+  const chars = [...text];
+  el.textContent = "";
+  const spans = chars.map((ch) => {
+    const sp = document.createElement("span");
+    sp.className = ch === " " ? "dc" : "dc dscr";
+    sp.textContent = ch === " " ? " " : rnd();
+    el.appendChild(sp);
+    return sp;
+  });
+  const start = performance.now();
+  let locked = 0;
+  const timer = setInterval(() => {
+    const n = Math.min(chars.length, Math.floor((performance.now() - start) / DECODE_LOCK_MS));
+    for (let i = 0; i < chars.length; i++) {
+      if (chars[i] === " ") continue;
+      if (i < n) {
+        if (i >= locked) { spans[i].className = "dc dfix"; spans[i].textContent = chars[i]; }
+      } else {
+        spans[i].textContent = rnd();
+      }
+    }
+    locked = n;
+    if (n >= chars.length) { clearInterval(timer); decodeTimers.delete(el); el.textContent = text; }
+  }, DECODE_TICK_MS);
+  decodeTimers.set(el, timer);
+}
+function playFolderDecode() {
+  document.querySelectorAll(".folder-name").forEach(decodeName);
 }
 
 /* ========================= 背景の流れるコード(CodeVault) ========================= */
@@ -2197,7 +2245,7 @@ function openSettingsSheet() {
     </div>`;
   showOverlay();
 
-  document.getElementById("closeSettingsBtn").addEventListener("click", closeOverlay);
+  document.getElementById("closeSettingsBtn").addEventListener("click", () => { closeOverlay(); playFolderDecode(); });
   document.getElementById("autolockBtn").addEventListener("click", openAutoLockSheet);
   document.getElementById("changePwBtn").addEventListener("click", openChangePasswordSheet);
   document.getElementById("exportBtn").addEventListener("click", exportBackup);
@@ -2633,6 +2681,7 @@ function render() {
   } else {
     app.innerHTML = renderMain();
     bindMain();
+    if (!decodedSinceLock) { decodedSinceLock = true; playFolderDecode(); } // ロック解除後、最初のトップ画面で1回だけ
   }
 }
 
